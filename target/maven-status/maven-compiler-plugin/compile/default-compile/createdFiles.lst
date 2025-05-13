@@ -1,4 +1,4 @@
 com\example\sortitems\repository\ItemRepository.class
 com\example\sortitems\controller\ItemController.class
-com\example\sortitems\SortItemsApplication.class
+com\example\sortitems\Main.class
 com\example\sortitems\model\Item.class
