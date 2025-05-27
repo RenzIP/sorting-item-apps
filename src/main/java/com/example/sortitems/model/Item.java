@@ -45,4 +45,9 @@ public class Item {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
+
+    @Override
+    public String toString() {
+        return "Item{name='" + name + "', quantity=" + quantity + ", id=" + (id != null ? id.toHexString() : "null") + "}";
+    }
 }
