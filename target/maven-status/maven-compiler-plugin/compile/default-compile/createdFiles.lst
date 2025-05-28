@@ -6,6 +6,7 @@ com\example\sortitems\model\User.class
 com\example\sortitems\Main.class
 com\example\sortitems\service\ActivityLogService.class
 com\example\sortitems\model\Item.class
+com\example\sortitems\config\SecurityConfig.class
 com\example\sortitems\repository\ItemRepository.class
 com\example\sortitems\model\ActivityLog.class
 com\example\sortitems\repository\UserRepository.class
