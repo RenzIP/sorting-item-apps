@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History of Activities</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">History of Activities</h1>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-3 border-b">ID</th>
+                        <th class="p-3 border-b">Action</th>
+                        <th class="p-3 border-b">Item ID</th>
+                        <th class="p-3 border-b">Item Name</th>
+                        <th class="p-3 border-b">Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="log : ${logs}" class="hover:bg-gray-50">
+                        <td class="p-3 border-b" th:text="${log.id}"></td>
+                        <td class="p-3 border-b" th:text="${log.action}"></td>
+                        <td class="p-3 border-b" th:text="${log.itemId}"></td>
+                        <td class="p-3 border-b" th:text="${log.itemName}"></td>
+                        <td class="p-3 border-b" th:text="${#temporals.format(log.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <br>
+        <a href="/sort" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Back to Items</a>
+    </div>
+</body>
+</html>

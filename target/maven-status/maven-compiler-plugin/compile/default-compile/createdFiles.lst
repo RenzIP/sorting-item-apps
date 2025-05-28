@@ -1,5 +1,8 @@
 com\example\sortitems\repository\ItemRepository.class
+com\example\sortitems\model\ActivityLog.class
+com\example\sortitems\repository\ActivityLogRepository.class
 com\example\sortitems\WebConfig.class
 com\example\sortitems\controller\ItemController.class
 com\example\sortitems\Main.class
+com\example\sortitems\service\ActivityLogService.class
 com\example\sortitems\model\Item.class
