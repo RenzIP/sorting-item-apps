@@ -1,8 +1,13 @@
 C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\service\ActivityLogService.java
+C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\config\SecurityConfig.java
 C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\model\Item.java
+C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\config\DataInitializer.java
+C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\controller\ItemController.java
+C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\model\User.java
+C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\repository\UserRepository.java
+C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\controller\LoginController.java
 C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\WebConfig.java
 C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\model\ActivityLog.java
 C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\Main.java
 C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\repository\ItemRepository.java
-C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\controller\ItemController.java
 C:\Users\zenku\OneDrive\Documents\sorting-item-apps\src\main\java\com\example\sortitems\repository\ActivityLogRepository.java
