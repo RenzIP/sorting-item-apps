@@ -12,13 +12,15 @@ public class Item {
     private ObjectId id;
     private String name;
     private int quantity;
+    private String imageUrl;
 
     public Item() {
     }
 
-    public Item(String name, int quantity) {
+    public Item(String name, int quantity, String imageUrl) {
         this.name = name;
         this.quantity = quantity;
+        this.imageUrl = imageUrl;
     }
 
     public ObjectId getId() {
@@ -30,12 +32,20 @@ public class Item {
         return id != null ? id.toHexString() : null;
     }
 
+    public String getImageUrl() { // Getter untuk imageUrl
+        return imageUrl;
+    }
+
     public String getName() {
         return name;
     }
 
     public int getQuantity() {
         return quantity;
+    }
+
+    public void setImageUrl(String imageUrl) { // Setter untuk imageUrl
+        this.imageUrl = imageUrl;
     }
 
     public void setName(String name) {
@@ -48,6 +58,11 @@ public class Item {
 
     @Override
     public String toString() {
-        return "Item{name='" + name + "', quantity=" + quantity + ", id=" + (id != null ? id.toHexString() : "null") + "}";
+        return "Item{" +
+               "id=" + (id != null ? id.toHexString() : "null") +
+               ", name='" + name + '\'' +
+               ", quantity=" + quantity +
+               ", imageUrl='" + imageUrl + '\'' + // Tambahkan ke toString
+               '}';
     }
 }

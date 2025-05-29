@@ -95,8 +95,8 @@ public class ItemController {
 
     @PostMapping("/add")
     @ResponseBody
-    public Map<String, Object> addItem(@RequestParam String name, @RequestParam int quantity) {
-        Item item = new Item(name, quantity);
+    public Map<String, Object> addItem(@RequestParam String name, @RequestParam int quantity, @RequestParam(required = false) String imageUrl) {
+        Item item = new Item(name, quantity, imageUrl);
         itemRepository.save(item);
         // Catat aktivitas
         activityLogService.logActivity("ADD", item.getId().toString(), item.getName());
@@ -140,7 +140,7 @@ public class ItemController {
     @PostMapping("/update/{id}")
     @ResponseBody
     public Map<String, Object> updateItem(@PathVariable String id, @RequestParam String name,
-            @RequestParam int quantity) {
+            @RequestParam int quantity, @RequestParam(required = false) String imageUrl) {
         Map<String, Object> response = new HashMap<>();
         try {
             if (!ObjectId.isValid(id)) {
@@ -153,6 +153,7 @@ public class ItemController {
                 String oldName = item.getName();
                 item.setName(name);
                 item.setQuantity(quantity);
+                item.setImageUrl(imageUrl);
                 itemRepository.save(item);
                 // Catat aktivitas
                 activityLogService.logActivity("EDIT", id, oldName + " -> " + name);
