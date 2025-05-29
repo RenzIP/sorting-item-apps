@@ -13,14 +13,17 @@ public class Item {
     private String name;
     private int quantity;
     private String imageUrl;
+    private String category;
 
     public Item() {
     }
 
-    public Item(String name, int quantity, String imageUrl) {
+    public Item(String name, int quantity, String imageUrl, String category) {
         this.name = name;
         this.quantity = quantity;
         this.imageUrl = imageUrl;
+        this.category = category;
+
     }
 
     public ObjectId getId() {
@@ -36,6 +39,10 @@ public class Item {
         return imageUrl;
     }
 
+    public String getCategory() { // Getter untuk category
+        return category;
+    }
+
     public String getName() {
         return name;
     }
@@ -46,6 +53,10 @@ public class Item {
 
     public void setImageUrl(String imageUrl) { // Setter untuk imageUrl
         this.imageUrl = imageUrl;
+    }
+
+    public void setCategory(String category) { // Setter untuk category
+        this.category = category;
     }
 
     public void setName(String name) {
@@ -62,7 +73,8 @@ public class Item {
                "id=" + (id != null ? id.toHexString() : "null") +
                ", name='" + name + '\'' +
                ", quantity=" + quantity +
-               ", imageUrl='" + imageUrl + '\'' + // Tambahkan ke toString
+               ", imageUrl='" + imageUrl + '\'' +
+               ", category='" + category + '\'' +
                '}';
     }
 }

@@ -37,8 +37,9 @@ public class ItemController {
 
     @GetMapping("/sort")
     public String showItems(@RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String search, Model model, HttpServletRequest request) {
-        List<Item> items = itemRepository.findAll();
+            @RequestParam(required = false) String search, @RequestParam(required = false) String filterByCategory, // Added @RequestParam
+                            Model model, HttpServletRequest request) {
+        List<Item> items = getItems(sortBy, search, filterByCategory);
         System.out.println("All items before filtering: " + items);
 
         if (search != null && !search.trim().isEmpty()) {
@@ -60,15 +61,16 @@ public class ItemController {
         model.addAttribute("items", items);
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("search", search);
+        model.addAttribute("filterByCategory", filterByCategory);
         return "sort";
     }
 
     @GetMapping(value = "/sort/api", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> getItemsApi(@RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search, @RequestParam(required = false) String filterByCategory) {
         System.out.println("API call - Method getItemsApi invoked for /sort/api");
-        List<Item> items = itemRepository.findAll();
+        List<Item> items = getItems(sortBy, search, filterByCategory);
         System.out.println("API call - All items before filtering: " + items);
 
         if (search != null && !search.trim().isEmpty()) {
@@ -86,7 +88,7 @@ public class ItemController {
         } else {
             items = bubbleSortByName(items);
         }
-
+        
         Map<String, Object> response = new HashMap<>();
         response.put("items", items);
         System.out.println("API call - Response: " + response);
@@ -95,8 +97,8 @@ public class ItemController {
 
     @PostMapping("/add")
     @ResponseBody
-    public Map<String, Object> addItem(@RequestParam String name, @RequestParam int quantity, @RequestParam(required = false) String imageUrl) {
-        Item item = new Item(name, quantity, imageUrl);
+    public Map<String, Object> addItem(@RequestParam String name, @RequestParam int quantity, @RequestParam(required = false) String imageUrl, @RequestParam(required = false) String category) {
+        Item item = new Item(name, quantity, imageUrl, category);
         itemRepository.save(item);
         // Catat aktivitas
         activityLogService.logActivity("ADD", item.getId().toString(), item.getName());
@@ -104,7 +106,7 @@ public class ItemController {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
         response.put("message", "Item added successfully!");
-        response.put("items", getItems(null, null));
+        response.put("items", getItems(null, null, null));
         return response;
     }
 
@@ -129,7 +131,7 @@ public class ItemController {
             }
             response.put("status", "success");
             response.put("message", "Item deleted successfully!");
-            response.put("items", getItems(null, null));
+            response.put("items", getItems(null, null, null));
         } catch (IllegalArgumentException e) {
             response.put("status", "error");
             response.put("message", "Invalid ObjectId: " + id);
@@ -140,7 +142,7 @@ public class ItemController {
     @PostMapping("/update/{id}")
     @ResponseBody
     public Map<String, Object> updateItem(@PathVariable String id, @RequestParam String name,
-            @RequestParam int quantity, @RequestParam(required = false) String imageUrl) {
+            @RequestParam int quantity, @RequestParam(required = false) String imageUrl, @RequestParam(required = false) String category) {
         Map<String, Object> response = new HashMap<>();
         try {
             if (!ObjectId.isValid(id)) {
@@ -154,12 +156,13 @@ public class ItemController {
                 item.setName(name);
                 item.setQuantity(quantity);
                 item.setImageUrl(imageUrl);
+                item.setCategory(category);
                 itemRepository.save(item);
                 // Catat aktivitas
                 activityLogService.logActivity("EDIT", id, oldName + " -> " + name);
                 response.put("status", "success");
                 response.put("message", "Item updated successfully!");
-                response.put("items", getItems(null, null));
+                response.put("items", getItems(null, null, null));
             } else {
                 response.put("status", "error");
                 response.put("message", "Item not found!");
@@ -178,8 +181,18 @@ public class ItemController {
         return "history";
     }
 
-    private List<Item> getItems(String sortBy, String search) {
+    private List<Item> getItems(String sortBy, String search, String filterByCategory) {
         List<Item> items = itemRepository.findAll();
+
+        if (filterByCategory != null && !filterByCategory.trim().isEmpty() && !filterByCategory.equalsIgnoreCase("All Categories")) {
+            String filterCategoryLower = filterByCategory.toLowerCase();
+            System.out.println("Filtering by category: " + filterCategoryLower);
+            items = items.stream()
+                    .filter(item -> item.getCategory() != null &&
+                                   item.getCategory().equalsIgnoreCase(filterCategoryLower))
+                    .collect(Collectors.toList());
+            System.out.println("Items after category filter: " + items.size());
+        }
 
         if (search != null && !search.trim().isEmpty()) {
             String searchLower = search.toLowerCase();
@@ -191,6 +204,8 @@ public class ItemController {
 
         if ("quantity".equals(sortBy)) {
             return bubbleSortByQuantity(items);
+        } else if ("category".equals(sortBy)) { 
+            return bubbleSortByCategory(items);
         } else {
             return bubbleSortByName(items);
         }
@@ -215,6 +230,31 @@ public class ItemController {
         for (int i = 0; i < n - 1; i++) {
             for (int j = 0; j < n - i - 1; j++) {
                 if (items.get(j).getQuantity() > items.get(j + 1).getQuantity()) {
+                    Item temp = items.get(j);
+                    items.set(j, items.get(j + 1));
+                    items.set(j + 1, temp);
+                }
+            }
+        }
+        return items;
+    }
+
+    private List<Item> bubbleSortByCategory(List<Item> items) {
+        int n = items.size();
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - i - 1; j++) {
+                String category1 = items.get(j).getCategory();
+                String category2 = items.get(j + 1).getCategory();
+
+                // Handle null categories to avoid NullPointerException
+                // Treat nulls as coming before non-nulls, or handle as per your preference
+                int comparison;
+                if (category1 == null && category2 == null) comparison = 0;
+                else if (category1 == null) comparison = -1; // category1 comes first
+                else if (category2 == null) comparison = 1;  // category2 comes first
+                else comparison = category1.compareToIgnoreCase(category2);
+
+                if (comparison > 0) {
                     Item temp = items.get(j);
                     items.set(j, items.get(j + 1));
                     items.set(j + 1, temp);
