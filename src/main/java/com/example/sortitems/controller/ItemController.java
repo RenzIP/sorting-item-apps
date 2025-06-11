@@ -37,8 +37,9 @@ public class ItemController {
 
     @GetMapping("/sort")
     public String showItems(@RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String search, @RequestParam(required = false) String filterByCategory, // Added @RequestParam
-                            Model model, HttpServletRequest request) {
+                           @RequestParam(required = false) String search,
+                           @RequestParam(required = false) String filterByCategory,
+                           Model model, HttpServletRequest request) {
         List<Item> items = getItems(sortBy, search, filterByCategory);
         System.out.println("All items before filtering: " + items);
 
@@ -46,14 +47,16 @@ public class ItemController {
             String searchLower = search.toLowerCase();
             System.out.println("Search term: " + searchLower);
             items = items.stream()
-                    .filter(item -> item.getName() != null && !item.getName().trim().isEmpty()
-                            && item.getName().toLowerCase().startsWith(searchLower))
-                    .collect(Collectors.toList());
+                .filter(item -> item.getName() != null && !item.getName().trim().isEmpty()
+                    && item.getName().toLowerCase().startsWith(searchLower))
+                .collect(Collectors.toList());
             System.out.println("Filtered items: " + items);
         }
 
-        if ("quantity".equals(sortBy)) {
+        if ("quantity".equalsIgnoreCase(sortBy)) {
             items = bubbleSortByQuantity(items);
+        } else if ("category".equalsIgnoreCase(sortBy)) {
+            items = bubbleSortByCategory(items);
         } else {
             items = bubbleSortByName(items);
         }
@@ -68,7 +71,8 @@ public class ItemController {
     @GetMapping(value = "/sort/api", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> getItemsApi(@RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String search, @RequestParam(required = false) String filterByCategory) {
+                                           @RequestParam(required = false) String search,
+                                           @RequestParam(required = false) String filterByCategory) {
         System.out.println("API call - Method getItemsApi invoked for /sort/api");
         List<Item> items = getItems(sortBy, search, filterByCategory);
         System.out.println("API call - All items before filtering: " + items);
@@ -77,18 +81,20 @@ public class ItemController {
             String searchLower = search.toLowerCase();
             System.out.println("API call - Search term: " + searchLower);
             items = items.stream()
-                    .filter(item -> item.getName() != null && !item.getName().trim().isEmpty()
-                            && item.getName().toLowerCase().startsWith(searchLower))
-                    .collect(Collectors.toList());
+                .filter(item -> item.getName() != null && !item.getName().trim().isEmpty()
+                    && item.getName().toLowerCase().startsWith(searchLower))
+                .collect(Collectors.toList());
             System.out.println("API call - Filtered items: " + items);
         }
 
-        if ("quantity".equals(sortBy)) {
+        if ("quantity".equalsIgnoreCase(sortBy)) {
             items = bubbleSortByQuantity(items);
+        } else if ("category".equalsIgnoreCase(sortBy)) {
+            items = bubbleSortByCategory(items);
         } else {
             items = bubbleSortByName(items);
         }
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("items", items);
         System.out.println("API call - Response: " + response);

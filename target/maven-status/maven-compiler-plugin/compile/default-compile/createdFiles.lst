@@ -1,5 +1,6 @@
 com\example\sortitems\repository\ActivityLogRepository.class
 com\example\sortitems\WebConfig.class
+com\example\sortitems\controller\RegistrationController.class
 com\example\sortitems\controller\ItemController.class
 com\example\sortitems\controller\LoginController.class
 com\example\sortitems\model\User.class

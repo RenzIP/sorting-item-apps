@@ -19,16 +19,21 @@ public class DataInitializer {
 
     @PostConstruct
     public void init() {
-        // Tambahkan pengguna admin
-        if (!userRepository.findByUsername("admin").isPresent()) {
-            User admin = new User("admin", passwordEncoder.encode("admin123"), "ROLE_ADMIN");
-            userRepository.save(admin);
-        }
+        try {
+            // Tambahkan pengguna admin
+            if (!userRepository.findByUsername("admin").isPresent()) {
+                User admin = new User("admin", passwordEncoder.encode("admin123"), "ROLE_ADMIN");
+                userRepository.save(admin);
+            }
 
-        // Tambahkan pengguna biasa
-        if (!userRepository.findByUsername("user").isPresent()) {
-            User user = new User("user", passwordEncoder.encode("user123"), "ROLE_USER");
-            userRepository.save(user);
+            // Tambahkan pengguna biasa
+            if (!userRepository.findByUsername("user").isPresent()) {
+                User user = new User("user", passwordEncoder.encode("user123"), "ROLE_USER");
+                userRepository.save(user);
+            }
+        } catch (Exception e) {
+            System.err.println("Error in DataInitializer: " + e.getMessage());
+            throw e;
         }
     }
 }

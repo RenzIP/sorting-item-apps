@@ -23,10 +23,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/logout") // Disable CSRF for logout
+                .ignoringRequestMatchers("/logout", "/register", "/sort/api") // Disable CSRF for logout
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/resources/**").permitAll()
+                .requestMatchers("/login", "/register", "/resources/**").permitAll()
                 .requestMatchers("/add", "/update/**", "/delete/**").hasRole("ADMIN")
                 .requestMatchers("/sort", "/sort/api", "/history").hasAnyRole("ADMIN", "USER")
                 .anyRequest().authenticated()
