@@ -14,6 +14,8 @@ import com.example.sortitems.repository.ActivityLogRepository;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +41,9 @@ public class ItemController {
     public String showItems(@RequestParam(required = false) String sortBy,
                            @RequestParam(required = false) String search,
                            @RequestParam(required = false) String filterByCategory,
+                           @RequestParam(required = false) Integer pageSize,
                            Model model, HttpServletRequest request) {
-        List<Item> items = getItems(sortBy, search, filterByCategory);
+        List<Item> items = getItems(sortBy, search, filterByCategory, pageSize);
         System.out.println("All items before filtering: " + items);
 
         if (search != null && !search.trim().isEmpty()) {
@@ -65,6 +68,7 @@ public class ItemController {
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("search", search);
         model.addAttribute("filterByCategory", filterByCategory);
+        model.addAttribute("pageSize", pageSize);
         return "sort";
     }
 
@@ -72,9 +76,10 @@ public class ItemController {
     @ResponseBody
     public Map<String, Object> getItemsApi(@RequestParam(required = false) String sortBy,
                                            @RequestParam(required = false) String search,
-                                           @RequestParam(required = false) String filterByCategory) {
+                                           @RequestParam(required = false) String filterByCategory,
+                                           @RequestParam(required = false) Integer pageSize) {
         System.out.println("API call - Method getItemsApi invoked for /sort/api");
-        List<Item> items = getItems(sortBy, search, filterByCategory);
+        List<Item> items = getItems(sortBy, search, filterByCategory, pageSize);
         System.out.println("API call - All items before filtering: " + items);
 
         if (search != null && !search.trim().isEmpty()) {
@@ -112,7 +117,7 @@ public class ItemController {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
         response.put("message", "Item added successfully!");
-        response.put("items", getItems(null, null, null));
+        response.put("items", getItems(null, null, null, null));
         return response;
     }
 
@@ -137,7 +142,7 @@ public class ItemController {
             }
             response.put("status", "success");
             response.put("message", "Item deleted successfully!");
-            response.put("items", getItems(null, null, null));
+            response.put("items", getItems(null, null, null, null));
         } catch (IllegalArgumentException e) {
             response.put("status", "error");
             response.put("message", "Invalid ObjectId: " + id);
@@ -168,7 +173,7 @@ public class ItemController {
                 activityLogService.logActivity("EDIT", id, oldName + " -> " + name);
                 response.put("status", "success");
                 response.put("message", "Item updated successfully!");
-                response.put("items", getItems(null, null, null));
+                response.put("items", getItems(null, null, null, null));
             } else {
                 response.put("status", "error");
                 response.put("message", "Item not found!");
@@ -187,7 +192,7 @@ public class ItemController {
         return "history";
     }
 
-    private List<Item> getItems(String sortBy, String search, String filterByCategory) {
+    private List<Item> getItems(String sortBy, String search, String filterByCategory, Integer pageSize) {
         List<Item> items = itemRepository.findAll();
 
         if (filterByCategory != null && !filterByCategory.trim().isEmpty() && !filterByCategory.equalsIgnoreCase("All Categories")) {
@@ -209,12 +214,16 @@ public class ItemController {
         }
 
         if ("quantity".equals(sortBy)) {
-            return bubbleSortByQuantity(items);
+            items = bubbleSortByQuantity(items);
         } else if ("category".equals(sortBy)) { 
-            return bubbleSortByCategory(items);
+            items = bubbleSortByCategory(items);
         } else {
-            return bubbleSortByName(items);
+            items = bubbleSortByName(items);
         }
+        if (pageSize != null && pageSize > 0 && items.size() > pageSize) {
+            items = new ArrayList<>(items.subList(0, pageSize));
+        }
+        return items;
     }
 
     private List<Item> bubbleSortByName(List<Item> items) {
