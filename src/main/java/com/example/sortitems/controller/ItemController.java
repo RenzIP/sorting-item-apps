@@ -41,9 +41,24 @@ public class ItemController {
     public String showItems(@RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String filterByCategory,
-            @RequestParam(required = false) Integer pageSize,
+            @RequestParam(required = false) String pageSize,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
             Model model, HttpServletRequest request) {
-        List<Item> items = getItems(sortBy, search, filterByCategory, pageSize);
+        List<Item> items = getItems(sortBy, search, filterByCategory, null);
+        int totalItems = items.size();
+        int pageSizeInt = Integer.MAX_VALUE;
+        if (pageSize != null && !pageSize.equalsIgnoreCase("all")) {
+            try {
+                pageSizeInt = Integer.parseInt(pageSize);
+            } catch (NumberFormatException e) {
+                pageSizeInt = Integer.MAX_VALUE;
+            }
+        }
+        int totalPages = (int) Math.ceil((double) totalItems / pageSizeInt);
+
+        int fromIndex = Math.max(0, (page - 1) * pageSizeInt);
+        int toIndex = Math.min(fromIndex + pageSizeInt, totalItems);
+        List<Item> pageItems = items.subList(fromIndex, toIndex);
         System.out.println("All items before filtering: " + items);
 
         if (search != null && !search.trim().isEmpty()) {
@@ -64,11 +79,13 @@ public class ItemController {
             items = bubbleSortByName(items);
         }
 
-        model.addAttribute("items", items);
+        model.addAttribute("items", pageItems);
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("search", search);
         model.addAttribute("filterByCategory", filterByCategory);
         model.addAttribute("pageSize", pageSize);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
         return "sort";
     }
 
@@ -284,9 +301,6 @@ public class ItemController {
             items = bubbleSortByCategory(items);
         } else {
             items = bubbleSortByName(items);
-        }
-        if (pageSize != null && pageSize > 0 && items.size() > pageSize) {
-            items = new ArrayList<>(items.subList(0, pageSize));
         }
         return items;
     }
