@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Trash Bin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen py-10 flex flex-col items-center">
+    <div class="w-full max-w-2xl flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Trash Bin</h1>
+        <a th:href="@{/sort}" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Back to Items</a>
+    </div>
+
+    <div class="w-full max-w-2xl">
+        <table class="w-full bg-white shadow-md rounded-lg overflow-hidden">
+            <thead>
+                <tr class="bg-gray-200 text-gray-600 uppercase text-sm">
+                    <th class="py-3 px-6 text-left">Image</th>
+                    <th class="py-3 px-6 text-left">Category</th>
+                    <th class="py-3 px-6 text-left">Name</th>
+                    <th class="py-3 px-6 text-left">Quantity</th>
+                    <th class="py-3 px-6 text-left">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${items}" class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-3 px-6">
+                        <img th:if="${item.imageUrl != null && !item.imageUrl.isEmpty()}" th:src="${item.imageUrl}"
+                             alt="Item Image" class="h-16 w-16 object-cover rounded">
+                        <span th:unless="${item.imageUrl != null && !item.imageUrl.isEmpty()}" class="text-gray-400">No Image</span>
+                    </td>
+                    <td class="py-3 px-6" th:text="${item.category ?: 'N/A'}">Item Category</td>
+                    <td class="py-3 px-6" th:text="${item.name}">Item Name</td>
+                    <td class="py-3 px-6" th:text="${item.quantity}">Item Quantity</td>
+                    <td class="py-3 px-6 flex space-x-2">
+                        <form th:action="@{/restore/{id}(id=${item.idAsString})}" method="post">
+                            <button type="submit"
+                                class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600">Restore</button>
+                        </form>
+                        <form th:action="@{/trash/delete/{id}(id=${item.idAsString})}" method="post"
+                              onsubmit="return confirmPermanentDelete(event)">
+                            <button type="submit"
+                                class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600">Delete Permanently</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${items.size() == 0}">
+                    <td colspan="5" class="text-center py-4 text-gray-500">Trash is empty</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function confirmPermanentDelete(event) {
+            event.preventDefault();
+            const form = event.target;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This item will be permanently deleted!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+            return false;
+        }
+    </script>
+</body>
+</html>

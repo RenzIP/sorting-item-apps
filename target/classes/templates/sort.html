@@ -41,7 +41,8 @@
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="imageUrl">Image URL:</label>
                 <input type="url" id="imageUrl" name="imageUrl"
-                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://example.com/image.png">
+                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://example.com/image.png">
             </div>
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="category">Category:</label>
@@ -66,12 +67,13 @@
         <div class="flex-grow">
             <label class="block text-gray-700 text-sm font-bold mb-2" for="search">Search by Name:</label>
             <input type="text" id="search" name="search" th:value="${search}" placeholder="Type to search..."
-                   class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <!-- Category Filter -->
         <div class="flex-grow">
             <label for="categoryFilter" class="block text-gray-700 text-sm font-bold mb-2">Filter by Category:</label>
-            <select id="categoryFilter" name="categoryFilter" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select id="categoryFilter" name="categoryFilter"
+                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">All Categories</option>
                 <option value="Makanan" th:selected="${filterByCategory == 'Makanan'}">Makanan</option>
                 <option value="Minuman" th:selected="${filterByCategory == 'Minuman'}">Minuman</option>
@@ -85,7 +87,8 @@
     <div class="bg-white p-6 rounded-lg shadow-md mb-6 w-full max-w-2xl flex space-x-4 items-end">
         <div class="flex-grow">
             <label for="pageSizeSelect" class="block text-gray-700 text-sm font-bold mb-2">Items per Page:</label>
-            <select id="pageSizeSelect" name="pageSizeSelect" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select id="pageSizeSelect" name="pageSizeSelect"
+                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="all" th:selected="${pageSize == null || pageSize == 'all'}">All</option>
                 <option value="5" th:selected="${pageSize == 5}">5</option>
                 <option value="10" th:selected="${pageSize == 10}">10</option>
@@ -99,10 +102,16 @@
         <a th:href="@{/sort(sortBy='name')}" id="sortByName" class="text-blue-500 hover:underline mr-4">Sort by Name</a>
         <a th:href="@{/sort(sortBy='quantity')}" id="sortByQuantity" class="text-blue-500 hover:underline">Sort by
             Quantity</a>
-        <a th:href="@{/sort(sortBy='category')}" id="sortByCategory" class="text-blue-500 hover:underline ml-4 mr-4">Sort by Category</a>
+        <a th:href="@{/sort(sortBy='category')}" id="sortByCategory"
+            class="text-blue-500 hover:underline ml-4 mr-4">Sort by Category</a>
         <a th:href="@{/history}"
             class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200">View
             History</a>
+        <a th:href="@{/trash}"
+            class="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-200">
+            View Trash
+        </a>
+
     </div>
 
     <!-- Items Table -->
@@ -120,8 +129,10 @@
             <tbody id="itemsTableBody">
                 <tr th:each="item : ${items}" class="border-b border-gray-200 hover:bg-gray-50">
                     <td class="py-3 px-6">
-                        <img th:if="${item.imageUrl != null && !item.imageUrl.isEmpty()}" th:src="${item.imageUrl}" alt="Item Image" class="h-16 w-16 object-cover rounded">
-                        <span th:unless="${item.imageUrl != null && !item.imageUrl.isEmpty()}" class="text-gray-400">No Image</span>
+                        <img th:if="${item.imageUrl != null && !item.imageUrl.isEmpty()}" th:src="${item.imageUrl}"
+                            alt="Item Image" class="h-16 w-16 object-cover rounded">
+                        <span th:unless="${item.imageUrl != null && !item.imageUrl.isEmpty()}" class="text-gray-400">No
+                            Image</span>
                     </td>
                     <td class="py-3 px-6" th:text="${item.category ?: 'N/A'}">Item Category</td>
                     <td class="py-3 px-6" th:text="${item.name}">Item Name</td>
@@ -129,7 +140,9 @@
                     <td class="py-3 px-6">
                         <button
                             class="editButton bg-yellow-500 text-white px-4 py-1 rounded-lg hover:bg-yellow-600 transition duration-200 mr-2"
-                            th:data-id="${item.idAsString}" th:data-name="${item.name}" th:data-quantity="${item.quantity}" th:data-image-url="${item.imageUrl}" th:data-category="${item.category}">Edit</button>
+                            th:data-id="${item.idAsString}" th:data-name="${item.name}"
+                            th:data-quantity="${item.quantity}" th:data-image-url="${item.imageUrl}"
+                            th:data-category="${item.category}">Edit</button>
                         <form class="deleteForm inline" th:data-id="${item.idAsString}">
                             <button type="submit"
                                 class="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600 transition duration-200">Delete</button>
@@ -162,7 +175,8 @@
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="editImageUrl">Image URL:</label>
                     <input type="url" id="editImageUrl" name="imageUrl"
-                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://example.com/image.png">
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="https://example.com/image.png">
                 </div>
                 <div class="mb-4" sec:authorize="hasRole('ADMIN')">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="editCategory">Category:</label>
@@ -253,7 +267,7 @@
                     formData.append('quantity', quantity);
                     formData.append('imageUrl', imageUrl);
                     formData.append('category', category);
-                    
+
                     const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
                     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
@@ -528,62 +542,62 @@
                     const newTableBody = doc.querySelector('#itemsTableBody').innerHTML;
                     document.getElementById('itemsTableBody').innerHTML = newTableBody;
                     attachEventListeners();
-            const searchTerm = document.getElementById('search').value;
-            let url = '/sort/api?';
-            let apiUrl = '/sort/api?';
-            const params = [];
+                    const searchTerm = document.getElementById('search').value;
+                    let url = '/sort/api?';
+                    let apiUrl = '/sort/api?';
+                    const params = [];
 
-            if (currentSortBy) {
-                params.push(`sortBy=${encodeURIComponent(currentSortBy)}`);
-            }
-            if (currentFilterByCategory) {
-                params.push(`filterByCategory=${encodeURIComponent(currentFilterByCategory)}`);
-            }
-            if (searchTerm) {
-                params.push(`search=${encodeURIComponent(searchTerm)}`);
-            }
-            if (currentPageSize && currentPageSize !== 'all') {
-                params.push(`pageSize=${encodeURIComponent(currentPageSize)}`);
-            }
-            apiUrl += params.join('&');
-            console.log("Fetching items from API:", apiUrl);
-            fetch(apiUrl, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest' // Optional, but good practice for AJAX
-                }
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok: ' + response.statusText);
+                    if (currentSortBy) {
+                        params.push(`sortBy=${encodeURIComponent(currentSortBy)}`);
                     }
-                    return response.json();
-                })
-                .then(data => {
-                if (data && data.items) {
-                    updateTable(data.items);
-                } else {
-                    console.error('Invalid data structure from API:', data);
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Received invalid data from server.',
-                        icon: 'error',
-                        confirmButtonColor: '#d33'
-                    });
-                }
-            })
-                .catch(error => {
-                    console.error('Fetch items error:', error);
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Gagal memuat item.',
-                        text: 'Gagal memuat item: ' + error.message,
-                        icon: 'error',
-                        confirmButtonColor: '#d33'
-                    });
+                    if (currentFilterByCategory) {
+                        params.push(`filterByCategory=${encodeURIComponent(currentFilterByCategory)}`);
+                    }
+                    if (searchTerm) {
+                        params.push(`search=${encodeURIComponent(searchTerm)}`);
+                    }
+                    if (currentPageSize && currentPageSize !== 'all') {
+                        params.push(`pageSize=${encodeURIComponent(currentPageSize)}`);
+                    }
+                    apiUrl += params.join('&');
+                    console.log("Fetching items from API:", apiUrl);
+                    fetch(apiUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest' // Optional, but good practice for AJAX
+                        }
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok: ' + response.statusText);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data && data.items) {
+                                updateTable(data.items);
+                            } else {
+                                console.error('Invalid data structure from API:', data);
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'Received invalid data from server.',
+                                    icon: 'error',
+                                    confirmButtonColor: '#d33'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Fetch items error:', error);
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'Gagal memuat item.',
+                                text: 'Gagal memuat item: ' + error.message,
+                                icon: 'error',
+                                confirmButtonColor: '#d33'
+                            });
+                        });
                 });
-            });
         }
 
 
@@ -624,17 +638,17 @@
         });
 
         // Event listener for category filter
-        document.getElementById('categoryFilter').addEventListener('change', function() {
+        document.getElementById('categoryFilter').addEventListener('change', function () {
             currentFilterByCategory = this.value;
             fetchItems();
         });
 
         // Event listener for page size selector
-        document.getElementById('pageSizeSelect').addEventListener('change', function() {
+        document.getElementById('pageSizeSelect').addEventListener('change', function () {
             currentPageSize = this.value;
             fetchItems();
-    });
-         
+        });
+
         // Initial attachment of event listeners
         attachEventListeners();
     </script>

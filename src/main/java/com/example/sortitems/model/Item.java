@@ -14,6 +14,7 @@ public class Item {
     private int quantity;
     private String imageUrl;
     private String category;
+    private boolean deleted = false;
 
     public Item() {
     }
@@ -65,6 +66,14 @@ public class Item {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     @Override
