@@ -3,6 +3,9 @@
 
 <head>
     <title>Trash Bin</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -28,22 +31,26 @@
                 <tr th:each="item : ${items}" class="border-b border-gray-200 hover:bg-gray-50">
                     <td class="py-3 px-6">
                         <img th:if="${item.imageUrl != null && !item.imageUrl.isEmpty()}" th:src="${item.imageUrl}"
-                             alt="Item Image" class="h-16 w-16 object-cover rounded">
-                        <span th:unless="${item.imageUrl != null && !item.imageUrl.isEmpty()}" class="text-gray-400">No Image</span>
+                            alt="Item Image" class="h-16 w-16 object-cover rounded">
+                        <span th:unless="${item.imageUrl != null && !item.imageUrl.isEmpty()}" class="text-gray-400">No
+                            Image</span>
                     </td>
                     <td class="py-3 px-6" th:text="${item.category ?: 'N/A'}">Item Category</td>
                     <td class="py-3 px-6" th:text="${item.name}">Item Name</td>
                     <td class="py-3 px-6" th:text="${item.quantity}">Item Quantity</td>
                     <td class="py-3 px-6 flex space-x-2">
-                        <form th:action="@{/restore/{id}(id=${item.idAsString})}" method="post">
-                            <button type="submit"
-                                class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600">Restore</button>
-                        </form>
-                        <form th:action="@{/trash/delete/{id}(id=${item.idAsString})}" method="post"
-                              onsubmit="return confirmPermanentDelete(event)">
-                            <button type="submit"
-                                class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600">Delete Permanently</button>
-                        </form>
+                        <button type="button"
+                            class="restoreBtn bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600"
+                            th:data-id="${item.idAsString}">
+                            Restore
+                        </button>
+
+                        <button type="button"
+                            class="permanentDeleteBtn bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+                            th:data-id="${item.idAsString}">
+                            Delete Permanently
+                        </button>
+
                     </td>
                 </tr>
                 <tr th:if="${items.size() == 0}">
@@ -54,24 +61,89 @@
     </div>
 
     <script>
-        function confirmPermanentDelete(event) {
-            event.preventDefault();
-            const form = event.target;
-            Swal.fire({
-                title: 'Are you sure?',
-                text: 'This item will be permanently deleted!',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then(result => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
+        document.querySelectorAll(".permanentDeleteBtn").forEach(button => {
+            button.addEventListener("click", function () {
+                const itemId = this.getAttribute("data-id");
+                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'This item will be permanently deleted!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        fetch(`/trash/delete/${itemId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                [csrfHeader]: csrfToken
+                            }
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.status === "success") {
+                                    Swal.fire('Deleted!', data.message, 'success').then(() => {
+                                        // Optional: reload or remove row
+                                        window.location.reload(); // atau hapus row jika ingin dinamis
+                                    });
+                                } else {
+                                    Swal.fire('Error!', data.message, 'error');
+                                }
+                            })
+                            .catch(err => {
+                                Swal.fire('Error!', 'Something went wrong.', 'error');
+                            });
+                    }
+                });
             });
-            return false;
-        }
+        });
+
+        document.querySelectorAll(".restoreBtn").forEach(button => {
+            button.addEventListener("click", function () {
+                const itemId = this.getAttribute("data-id");
+                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
+
+                Swal.fire({
+                    title: 'Restore Item?',
+                    text: 'Item will be moved back to active list.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#aaa',
+                    confirmButtonText: 'Yes, restore it!'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        fetch(`/restore/${itemId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                [csrfHeader]: csrfToken
+                            }
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.status === "success") {
+                                    Swal.fire('Restored!', data.message, 'success').then(() => {
+                                        window.location.reload(); // atau hapus row jika ingin dinamis
+                                    });
+                                } else {
+                                    Swal.fire('Error!', data.message, 'error');
+                                }
+                            })
+                            .catch(err => {
+                                Swal.fire('Error!', 'Restore failed.', 'error');
+                            });
+                    }
+                });
+            });
+        });
     </script>
 </body>
+
 </html>

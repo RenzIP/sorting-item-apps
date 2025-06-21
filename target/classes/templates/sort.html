@@ -5,99 +5,173 @@
     <title>Sort Items</title>
     <meta name="_csrf" th:content="${_csrf.token}" />
     <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="http://localhost:35729/livereload.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-enter {
+            animation: modalFadeIn 0.3s ease-in-out;
+        }
+
+        .modal-exit {
+            animation: modalFadeOut 0.3s ease-in-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes modalFadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.9); }
+        }
+
+        .btn {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        input:focus, select:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+        }
+
+        .input-error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: linear-gradient(to bottom, white, rgba(255, 255, 255, 0.95));
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex flex-col items-center py-10">
-    <div class="w-full max-w-2xl flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Sort Items</h1>
-        <div sec:authorize="isAuthenticated()">
-            <span class="text-gray-700 mr-4">Hello, <span sec:authentication="name"></span>!</span>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center py-6 px-4">
+    <!-- Header -->
+    <header class="w-full max-w-7xl flex justify-between items-center mb-8 px-4 py-4 rounded-xl shadow-sm">
+        <h1 class="text-3xl font-bold text-gray-900">Sort Items</h1>
+        <div sec:authorize="isAuthenticated()" class="flex items-center space-x-4">
+            <span class="text-gray-600 text-lg font-medium">Hello, <span sec:authentication="name"></span>!</span>
             <form th:action="@{/logout}" method="post" style="display: inline">
-                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                <button type="submit" class="btn bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700" aria-label="Logout">
                     Logout
                 </button>
             </form>
         </div>
-    </div>
+    </header>
 
-    <!-- Add Item Form (Hanya untuk Admin) -->
-    <div sec:authorize="hasRole('ADMIN')">
-        <form id="addForm" class="bg-white p-6 rounded-lg shadow-md mb-6 w-full max-w-md">
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="name">Name:</label>
+    <!-- Add Item Form (Admin Only) -->
+    <div sec:authorize="hasRole('ADMIN')" class="w-full max-w-md mb-8">
+        <form id="addForm" class="bg-white p-8 rounded-xl shadow-lg">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Add New Item</h2>
+            <div class="mb-5">
+                <label class="block text-gray-700 text-sm font-medium mb-2" for="name">Name</label>
                 <input type="text" id="name" name="name" required
-                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-required="true" />
+                <p class="text-red-500 text-sm mt-1 hidden" id="nameError">Please enter a valid name.</p>
             </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="quantity">Quantity:</label>
-                <input type="number" id="quantity" name="quantity" required
-                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <div class="mb-5">
+                <label class="block text-gray-700 text-sm font-medium mb-2" for="quantity">Quantity</label>
+                <input type="number" id="quantity" name="quantity" required min="0"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-required="true" />
+                <p class="text-red-500 text-sm mt-1 hidden" id="quantityError">Please enter a valid quantity.</p>
             </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="imageUrl">Image URL:</label>
+            <div class="mb-5">
+                <label class="block text-gray-700 text-sm font-medium mb-2" for="imageUrl">Image URL</label>
                 <input type="url" id="imageUrl" name="imageUrl"
-                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="https://example.com/image.png" />
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://example.com/image.png" aria-describedby="imageUrlHelp" />
+                <p class="text-gray-500 text-sm mt-1" id="imageUrlHelp">Optional: Provide a valid image URL.</p>
             </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="category">Category:</label>
+            <div class="mb-5">
+                <label class="block text-gray-700 text-sm font-medium mb-2" for="category">Category</label>
                 <select id="category" name="category" required
-                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Pilih Kategori</option>
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-required="true">
+                    <option value="">Select Category</option>
                     <option value="Makanan">Makanan</option>
                     <option value="Minuman">Minuman</option>
                     <option value="ATK">ATK</option>
                     <option value="Elektronik">Elektronik</option>
                 </select>
+                <p class="text-red-500 text-sm mt-1 hidden" id="categoryError">Please select a category.</p>
             </div>
             <button type="submit"
-                class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-200">
-                Add Item
+                class="btn w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 flex justify-center items-center"
+                aria-label="Add Item">
+                <span id="addButtonText">Add Item</span>
+                <div id="addButtonSpinner" class="loading-spinner hidden ml-2"></div>
             </button>
         </form>
     </div>
 
     <!-- Filters and Search -->
-    <div class="bg-white p-6 rounded-lg shadow-md mb-6 w-full max-w-2xl flex space-x-4">
-        <!-- Search Input -->
-        <div class="flex-grow">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="search">Search by Name:</label>
+    <div class="bg-white p-8 rounded-xl shadow-lg mb-8 w-full max-w-7xl flex flex-col md:flex-row md:space-x-6 space-y-6 md:space-y-0">
+        <div class="flex-1">
+            <label class="block text-gray-700 text-sm font-medium mb-2" for="search">Search by Name</label>
             <input type="text" id="search" name="search" th:value="${search}" placeholder="Type to search..."
-                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Search items by name" />
         </div>
-        <!-- Category Filter -->
-        <div class="flex-grow">
-            <label for="categoryFilter" class="block text-gray-700 text-sm font-bold mb-2">Filter by Category:</label>
+        <div class="flex-1">
+            <label for="categoryFilter" class="block text-gray-700 text-sm font-medium mb-2">Filter by Category</label>
             <select id="categoryFilter" name="categoryFilter"
-                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Filter items by category">
                 <option value="">All Categories</option>
-                <option value="Makanan" th:selected="${filterByCategory == 'Makanan'}">
-                    Makanan
-                </option>
-                <option value="Minuman" th:selected="${filterByCategory == 'Minuman'}">
-                    Minuman
-                </option>
-                <option value="ATK" th:selected="${filterByCategory == 'ATK'}">
-                    ATK
-                </option>
-                <option value="Elektronik" th:selected="${filterByCategory == 'Elektronik'}">
-                    Elektronik
-                </option>
+                <option value="Makanan" th:selected="${filterByCategory == 'Makanan'}">Makanan</option>
+                <option value="Minuman" th:selected="${filterByCategory == 'Minuman'}">Minuman</option>
+                <option value="ATK" th:selected="${filterByCategory == 'ATK'}">ATK</option>
+                <option value="Elektronik" th:selected="${filterByCategory == 'Elektronik'}">Elektronik</option>
             </select>
         </div>
-    </div>
-
-    <!-- Page Size Selector -->
-    <div class="bg-white p-6 rounded-lg shadow-md mb-6 w-full max-w-2xl flex space-x-4 items-end">
-        <div class="flex-grow">
-            <label for="pageSizeSelect" class="block text-gray-700 text-sm font-bold mb-2">Items per Page:</label>
+        <div class="flex-1">
+            <label for="pageSizeSelect" class="block text-gray-700 text-sm font-medium mb-2">Items per Page</label>
             <select id="pageSizeSelect" name="pageSizeSelect"
-                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Select items per page">
                 <option value="all" th:selected="${pageSize == null or pageSize == 'all'}">All</option>
                 <option value="5" th:selected="${pageSize == '5'}">5</option>
                 <option value="10" th:selected="${pageSize == '10'}">10</option>
@@ -107,164 +181,165 @@
     </div>
 
     <!-- Sort Links -->
-    <div class="mb-4">
-        <a th:href="@{/sort(sortBy='name')}" id="sortByName" class="text-blue-500 hover:underline mr-4">Sort by Name</a>
-        <a th:href="@{/sort(sortBy='quantity')}" id="sortByQuantity" class="text-blue-500 hover:underline">Sort by
-            Quantity</a>
-        <a th:href="@{/sort(sortBy='category')}" id="sortByCategory"
-            class="text-blue-500 hover:underline ml-4 mr-4">Sort by Category</a>
-        <a th:href="@{/history}"
-            class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200">View
-            History</a>
-        <a th:href="@{/trash}"
-            class="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-200">
-            View Trash
-        </a>
+    <div class="mb-8 flex flex-wrap gap-4 px-4">
+        <a th:href="@{/sort(sortBy='name')}" id="sortByName" class="btn text-blue-600 hover:underline font-medium" aria-label="Sort by name">Sort by Name</a>
+        <a th:href="@{/sort(sortBy='quantity')}" id="sortByQuantity" class="btn text-blue-600 hover:underline font-medium" aria-label="Sort by quantity">Sort by Quantity</a>
+        <a th:href="@{/sort(sortBy='category')}" id="sortByCategory" class="btn text-blue-600 hover:underline font-medium" aria-label="Sort by category">Sort by Category</a>
+        <a th:href="@{/history}" class="btn bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700" aria-label="View history">View History</a>
+        <a th:href="@{/trash}" class="btn bg-gray-600 text-white px-6 py-2 rounded-full hover:bg-gray-700" aria-label="View trash">View Trash</a>
     </div>
 
-    <!-- Items Table -->
-    <div class="w-full max-w-2xl">
-        <table id="itemsTable" class="w-full bg-white shadow-md rounded-lg overflow-hidden">
-            <thead>
-                <tr class="bg-gray-200 text-gray-600 uppercase text-sm">
-                    <th class="py-3 px-6 text-left">Image</th>
-                    <th class="py-3 px-6 text-left">Category</th>
-                    <th class="py-3 px-6 text-left">Name</th>
-                    <th class="py-3 px-6 text-left">Quantity</th>
-                    <th class="py-3 px-6 text-left">Action</th>
-                </tr>
-            </thead>
-            <tbody id="itemsTableBody">
-                <tr th:each="item : ${items}" class="border-b border-gray-200 hover:bg-gray-50">
-                    <td class="py-3 px-6">
-                        <img th:if="${item.imageUrl != null && !item.imageUrl.isEmpty()}" th:src="${item.imageUrl}"
-                            alt="Item Image" class="h-16 w-16 object-cover rounded" />
-                        <span th:unless="${item.imageUrl != null && !item.imageUrl.isEmpty()}" class="text-gray-400">No
-                            Image</span>
-                    </td>
-                    <td class="py-3 px-6" th:text="${item.category ?: 'N/A'}">
-                        Item Category
-                    </td>
-                    <td class="py-3 px-6" th:text="${item.name}">Item Name</td>
-                    <td class="py-3 px-6" th:text="${item.quantity}">Item Quantity</td>
-                    <td class="py-3 px-6">
+    <!-- Items Grid -->
+    <div class="w-full max-w-7xl" role="region" aria-label="Items list">
+        <div id="itemsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div th:each="item : ${items}" class="card bg-white rounded-xl shadow-lg p-6 flex flex-col"
+                th:data-id="${item.idAsString}">
+                <div class="flex items-center mb-4">
+                    <div th:if="${item.imageUrl != null && !item.imageUrl.isEmpty()}"
+                        class="h-16 w-16 flex-shrink-0">
+                        <img th:src="${item.imageUrl}" alt="Item Image" class="h-full w-full object-cover rounded-lg" />
+                    </div>
+                    <div th:unless="${item.imageUrl != null && !item.imageUrl.isEmpty()}"
+                        class="h-16 w-16 flex items-center justify-center bg-gray-100 rounded-lg">
+                        <span class="text-gray-400 text-sm">No Image</span>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-lg font-semibold text-gray-800" th:text="${item.name}">Item Name</h3>
+                        <p class="text-gray-600" th:text="${item.category ?: 'N/A'}">Item Category</p>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Quantity: <span th:text="${item.quantity}">0</span></span>
+                    <div class="flex space-x-2">
                         <button
-                            class="editButton bg-yellow-500 text-white px-4 py-1 rounded-lg hover:bg-yellow-600 transition duration-200 mr-2"
+                            class="editButton btn bg-yellow-500 text-white px-4 py-1.5 rounded-full hover:bg-yellow-600"
                             th:data-id="${item.idAsString}" th:data-name="${item.name}"
                             th:data-quantity="${item.quantity}" th:data-image-url="${item.imageUrl}"
-                            th:data-category="${item.category}">
+                            th:data-category="${item.category}" aria-label="Edit item">
                             Edit
                         </button>
                         <form class="deleteForm inline" th:data-id="${item.idAsString}">
                             <button type="submit"
-                                class="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600 transition duration-200">
+                                class="btn bg-red-500 text-white px-4 py-1.5 rounded-full hover:bg-red-600"
+                                aria-label="Delete item">
                                 Delete
                             </button>
                         </form>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="loadingSpinner" class="loading-spinner mx-auto mt-6 hidden"></div>
     </div>
 
     <!-- Pagination Controls -->
-    <div class="mt-6 flex justify-center items-center space-x-2" th:if="${totalPages > 1}">
+    <div class="mt-8 flex justify-center items-center space-x-4" th:if="${totalPages > 1}" role="navigation" aria-label="Pagination">
         <a th:href="@{/sort(page=${currentPage - 1}, pageSize=${pageSize}, sortBy=${sortBy}, filterByCategory=${filterByCategory}, search=${search})}"
             th:if="${currentPage > 1}"
-            class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Previous</a>
-
-        <span class="text-gray-700">Page <span th:text="${currentPage}"></span> of <span
+            class="btn px-6 py-2 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300" aria-label="Previous page">Previous</a>
+        <span class="text-gray-600 font-medium">Page <span th:text="${currentPage}"></span> of <span
                 th:text="${totalPages}"></span></span>
-
         <a th:href="@{/sort(page=${currentPage + 1}, pageSize=${pageSize}, sortBy=${sortBy}, filterByCategory=${filterByCategory}, search=${search})}"
             th:if="${currentPage < totalPages}"
-            class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Next</a>
+            class="btn px-6 py-2 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300" aria-label="Next page">Next</a>
     </div>
 
-    <!-- Edit Modal (Hidden by Default, Hanya untuk Admin) -->
-    <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden"
-        sec:authorize="hasRole('ADMIN')">
-        <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <h2 class="text-xl font-bold mb-4">Edit Item</h2>
+    <!-- Edit Modal (Hidden by Default, Admin Only) -->
+    <div id="editModal" class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center hidden"
+        sec:authorize="hasRole('ADMIN')" role="dialog" aria-label="Edit item modal">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md modal-enter">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Edit Item</h2>
             <form id="editForm" th:action="@{/update/{id}(id=${editId})}" method="post">
                 <input type="hidden" id="editId" name="id" />
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                <!-- Add CSRF token -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="editName">Name:</label>
+                <div class="mb-5">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="editName">Name</label>
                     <input type="text" id="editName" name="name" required
-                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-required="true" />
+                    <p class="text-red-500 text-sm mt-1 hidden" id="editNameError">Please enter a valid name.</p>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="editQuantity">Quantity:</label>
-                    <input type="number" id="editQuantity" name="quantity" required
-                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <div class="mb-5">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="editQuantity">Quantity</label>
+                    <input type="number" id="editQuantity" name="quantity" required min="0"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-required="true" />
+                    <p class="text-red-500 text-sm mt-1 hidden" id="editQuantityError">Please enter a valid quantity.</p>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="editImageUrl">Image URL:</label>
+                <div class="mb-5">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="editImageUrl">Image URL</label>
                     <input type="url" id="editImageUrl" name="imageUrl"
-                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="https://example.com/image.png" />
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="https://example.com/image.png" aria-describedby="editImageUrlHelp" />
+                    <p class="text-gray-500 text-sm mt-1" id="editImageUrlHelp">Optional: Provide a valid image URL.</p>
                 </div>
-                <div class="mb-4" sec:authorize="hasRole('ADMIN')">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="editCategory">Category:</label>
+                <div class="mb-5">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="editCategory">Category</label>
                     <select id="editCategory" name="category" required
-                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Pilih Kategori</option>
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-required="true">
+                        <option value="">Select Category</option>
                         <option value="Makanan">Makanan</option>
                         <option value="Minuman">Minuman</option>
                         <option value="ATK">ATK</option>
                         <option value="Elektronik">Elektronik</option>
                     </select>
+                    <p class="text-red-500 text-sm mt-1 hidden" id="editCategoryError">Please select a category.</p>
                 </div>
-                <div class="flex justify-end">
+                <div class="flex justify-end space-x-3">
                     <button type="button" id="closeModal"
-                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 mr-2">
-                        Cancel
-                    </button>
-                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                        Update
+                        class="btn bg-gray-500 text-white px-6 py-2 rounded-full hover:bg-gray-600"
+                        aria-label="Cancel edit">Cancel</button>
+                    <button type="submit"
+                        class="btn bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 flex justify-center items-center"
+                        aria-label="Update item">
+                        <span id="editButtonText">Update</span>
+                        <div id="editButtonSpinner" class="loading-spinner hidden ml-2"></div>
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- JavaScript for Handling AJAX and SweetAlert2 -->
+    <!-- JavaScript for Handling AJAX, SweetAlert2, and Form Validation -->
     <script>
         let currentSortBy = /*[[${sortBy}]]*/ null;
         let currentFilterByCategory = /*[[${filterByCategory}]]*/ "";
         let currentPageSize = /*[['${pageSize != null ? pageSize : "all"}']]*/ "all";
 
-        // Function to update the table dynamically
+        // Function to update the items grid dynamically
         function updateTable(items) {
-            const tbody = document.getElementById("itemsTableBody");
-            tbody.innerHTML = "";
+            const list = document.getElementById("itemsList");
+            list.innerHTML = "";
             items.forEach((item) => {
-                const row = document.createElement("tr");
-                row.className = "border-b border-gray-200 hover:bg-gray-50";
-                const imageUrlCell =
-                    item.imageUrl && item.imageUrl.trim() !== ""
-                        ? `<img src="${item.imageUrl}" alt="Item Image" class="h-16 w-16 object-cover rounded">`
-                        : '<span class="text-gray-400">No Image</span>';
-                row.innerHTML = `
-                <td class="py-3 px-6">${imageUrlCell}</td>
-                <td class="py-3 px-6">${item.category || "N/A"}</td>
-                <td class="py-3 px-6">${item.name}</td>
-                <td class="py-3 px-6">${item.quantity}</td>
-                <td class="py-3 px-6">
-                    <button class="editButton bg-yellow-500 text-white px-4 py-1 rounded-lg hover:bg-yellow-600 transition duration-200 mr-2" data-id="${item.id
-                    }" data-name="${item.name}" data-quantity="${item.quantity
-                    }" data-image-url="${item.imageUrl || ""}" data-category="${item.category || ""
-                    }">Edit</button>
-                    <form class="deleteForm inline" data-id="${item.id}">
-                        <button type="submit" class="bg-red-500 text-white px-4 py-1 rounded-lg hover:bg-red-600 transition duration-200">Delete</button>
-                    </form>
-                </td>
-            `;
-                tbody.appendChild(row);
+                const card = document.createElement("div");
+                card.className = "card bg-white rounded-xl shadow-lg p-6 flex flex-col";
+                card.setAttribute("data-id", item.id);
+                const imageUrlCell = item.imageUrl && item.imageUrl.trim() !== ""
+                    ? `<img src="${item.imageUrl}" alt="Item Image" class="h-16 w-16 object-cover rounded-lg">`
+                    : `<div class="h-16 w-16 flex items-center justify-center bg-gray-100 rounded-lg"><span class="text-gray-400 text-sm">No Image</span></div>`;
+                card.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <div class="h-16 w-16 flex-shrink-0">${imageUrlCell}</div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-semibold text-gray-800">${item.name}</h3>
+                            <p class="text-gray-600">${item.category || "N/A"}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Quantity: ${item.quantity}</span>
+                        <div class="flex space-x-2">
+                            <button class="editButton btn bg-yellow-500 text-white px-4 py-1.5 rounded-full hover:bg-yellow-600" data-id="${item.id}" data-name="${item.name}" data-quantity="${item.quantity}" data-image-url="${item.imageUrl || ""}" data-category="${item.category || ""}" aria-label="Edit item">Edit</button>
+                            <form class="deleteForm inline" data-id="${item.id}">
+                                <button type="submit" class="btn bg-red-500 text-white px-4 py-1.5 rounded-full hover:bg-red-600" aria-label="Delete item">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
             });
             attachEventListeners();
+            document.getElementById("loadingSpinner").classList.add("hidden");
         }
 
         // Function to attach event listeners to dynamically added elements
@@ -278,148 +353,212 @@
             });
         }
 
+        // Form validation for Add Form
+        function validateAddForm() {
+            const name = document.getElementById("name");
+            const quantity = document.getElementById("quantity");
+            const category = document.getElementById("category");
+            let isValid = true;
+
+            if (!name.value.trim()) {
+                name.classList.add("input-error");
+                document.getElementById("nameError").classList.remove("hidden");
+                isValid = false;
+            } else {
+                name.classList.remove("input-error");
+                document.getElementById("nameError").classList.add("hidden");
+            }
+
+            if (!quantity.value || quantity.value < 0) {
+                quantity.classList.add("input-error");
+                document.getElementById("quantityError").classList.remove("hidden");
+                isValid = false;
+            } else {
+                quantity.classList.remove("input-error");
+                document.getElementById("quantityError").classList.add("hidden");
+            }
+
+            if (!category.value) {
+                category.classList.add("input-error");
+                document.getElementById("categoryError").classList.remove("hidden");
+                isValid = false;
+            } else {
+                category.classList.remove("input-error");
+                document.getElementById("categoryError").classList.add("hidden");
+            }
+
+            return isValid;
+        }
+
+        // Form validation for Edit Form
+        function validateEditForm() {
+            const name = document.getElementById("editName");
+            const quantity = document.getElementById("editQuantity");
+            const category = document.getElementById("editCategory");
+            let isValid = true;
+
+            if (!name.value.trim()) {
+                name.classList.add("input-error");
+                document.getElementById("editNameError").classList.remove("hidden");
+                isValid = false;
+            } else {
+                name.classList.remove("input-error");
+                document.getElementById("editNameError").classList.add("hidden");
+            }
+
+            if (!quantity.value || quantity.value < 0) {
+                quantity.classList.add("input-error");
+                document.getElementById("editQuantityError").classList.remove("hidden");
+                isValid = false;
+            } else {
+                quantity.classList.remove("input-error");
+                document.getElementById("editQuantityError").classList.add("hidden");
+            }
+
+            if (!category.value) {
+                category.classList.add("input-error");
+                document.getElementById("editCategoryError").classList.remove("hidden");
+                isValid = false;
+            } else {
+                category.classList.remove("input-error");
+                document.getElementById("editCategoryError").classList.add("hidden");
+            }
+
+            return isValid;
+        }
+
         // Handle Add Item
-        document
-            .getElementById("addForm")
-            .addEventListener("submit", function (event) {
-                event.preventDefault();
-                const name = document.getElementById("name").value;
-                const quantity = document.getElementById("quantity").value;
-                const imageUrl = document.getElementById("imageUrl").value;
-                const category = document.getElementById("category").value;
+        document.getElementById("addForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            if (!validateAddForm()) return;
 
-                Swal.fire({
-                    title: "Apakah Anda yakin?",
-                    text: `Apakah Anda ingin menambahkan item: ${name} dengan jumlah ${quantity}?`,
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Ya, tambahkan!",
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const formData = new FormData();
-                        formData.append("name", name);
-                        formData.append("quantity", quantity);
-                        formData.append("imageUrl", imageUrl);
-                        formData.append("category", category);
+            const name = document.getElementById("name").value;
+            const quantity = document.getElementById("quantity").value;
+            const imageUrl = document.getElementById("imageUrl").value;
+            const category = document.getElementById("category").value;
+            const addButtonText = document.getElementById("addButtonText");
+            const addButtonSpinner = document.getElementById("addButtonSpinner");
 
-                        const csrfToken = document
-                            .querySelector('meta[name="_csrf"]')
-                            .getAttribute("content");
-                        const csrfHeader = document
-                            .querySelector('meta[name="_csrf_header"]')
-                            .getAttribute("content");
+            Swal.fire({
+                title: "Are you sure?",
+                text: `Do you want to add item: ${name} with quantity ${quantity}?`,
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#2563eb",
+                cancelButtonColor: "#dc2626",
+                confirmButtonText: "Yes, add it!",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    addButtonText.classList.add("hidden");
+                    addButtonSpinner.classList.remove("hidden");
+                    const formData = new FormData();
+                    formData.append("name", name);
+                    formData.append("quantity", quantity);
+                    formData.append("imageUrl", imageUrl);
+                    formData.append("category", category);
 
-                        fetch("/add", {
-                            method: "POST",
-                            body: formData,
-                            headers: {
-                                // Tambahkan CSRF header
-                                [csrfHeader]: csrfToken,
-                            },
-                        })
-                            .then((response) => response.json())
-                            .then((data) => {
-                                if (data.status === "success") {
-                                    Swal.fire({
-                                        title: "Berhasil!",
-                                        text: data.message,
-                                        icon: "success",
-                                        confirmButtonColor: "#3085d6",
-                                    });
-                                    // updateTable(data.items);
-                                    fetchItems();
-                                    document.getElementById("addForm").reset();
-                                } else {
-                                    Swal.fire({
-                                        title: "Error!",
-                                        text: data.message,
-                                        icon: "error",
-                                        confirmButtonColor: "#d33",
-                                    });
-                                }
-                            })
-                            .catch((error) => {
+                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
+
+                    fetch("/add", {
+                        method: "POST",
+                        body: formData,
+                        headers: { [csrfHeader]: csrfToken },
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            addButtonText.classList.remove("hidden");
+                            addButtonSpinner.classList.add("hidden");
+                            if (data.status === "success") {
+                                Swal.fire({
+                                    title: "Success!",
+                                    text: data.message,
+                                    icon: "success",
+                                    confirmButtonColor: "#2563eb",
+                                });
+                                fetchItems();
+                                document.getElementById("addForm").reset();
+                            } else {
                                 Swal.fire({
                                     title: "Error!",
-                                    text: "Gagal menambahkan item.",
+                                    text: data.message,
                                     icon: "error",
-                                    confirmButtonColor: "#d33",
+                                    confirmButtonColor: "#dc2626",
                                 });
+                            }
+                        })
+                        .catch((error) => {
+                            addButtonText.classList.remove("hidden");
+                            addButtonSpinner.classList.add("hidden");
+                            Swal.fire({
+                                title: "Error!",
+                                text: "Failed to add item.",
+                                icon: "error",
+                                confirmButtonColor: "#dc2626",
                             });
-                    }
-                });
+                        });
+                }
             });
+        });
 
         // Handle Delete Item
         function handleDelete(event) {
             event.preventDefault();
             const form = event.target;
             const id = form.getAttribute("data-id");
-            const itemName = form
-                .closest("tr")
-                .querySelector("td:nth-child(3)").textContent;
+            const itemName = form.closest(".card").querySelector("h3").textContent;
 
             if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
                 Swal.fire({
                     title: "Error!",
-                    text: "ID item tidak valid.",
+                    text: "Invalid item ID.",
                     icon: "error",
-                    confirmButtonColor: "#d33",
+                    confirmButtonColor: "#dc2626",
                 });
                 return;
             }
 
             Swal.fire({
-                title: "Apakah Anda yakin?",
-                text: `Apakah Anda ingin menghapus item: ${itemName}?`,
+                title: "Are you sure?",
+                text: `Do you want to delete item: ${itemName}?`,
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonColor: "#d33",
-                cancelButtonColor: "#3085d6",
-                confirmButtonText: "Ya, hapus!",
+                confirmButtonColor: "#dc2626",
+                cancelButtonColor: "#2563eb",
+                confirmButtonText: "Yes, delete it!",
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const csrfToken = document
-                        .querySelector('meta[name="_csrf"]')
-                        .getAttribute("content");
-                    const csrfHeader = document
-                        .querySelector('meta[name="_csrf_header"]')
-                        .getAttribute("content");
+                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
                     fetch(`/delete/${id}`, {
                         method: "POST",
-                        headers: {
-                            // Tambahkan CSRF header
-                            [csrfHeader]: csrfToken,
-                        },
+                        headers: { [csrfHeader]: csrfToken },
                     })
                         .then((response) => response.json())
                         .then((data) => {
                             if (data.status === "success") {
                                 Swal.fire({
-                                    title: "Berhasil!",
+                                    title: "Success!",
                                     text: data.message,
                                     icon: "success",
-                                    confirmButtonColor: "#3085d6",
+                                    confirmButtonColor: "#2563eb",
                                 });
-                                // updateTable(data.items);
                                 fetchItems();
                             } else {
                                 Swal.fire({
                                     title: "Error!",
                                     text: data.message,
                                     icon: "error",
-                                    confirmButtonColor: "#d33",
+                                    confirmButtonColor: "#dc2626",
                                 });
                             }
                         })
                         .catch((error) => {
                             Swal.fire({
                                 title: "Error!",
-                                text: "Gagal menghapus item.",
+                                text: "Failed to delete item.",
                                 icon: "error",
-                                confirmButtonColor: "#d33",
+                                confirmButtonColor: "#dc2626",
                             });
                         });
                 }
@@ -438,9 +577,9 @@
             if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
                 Swal.fire({
                     title: "Error!",
-                    text: "ID item tidak valid.",
+                    text: "Invalid item ID.",
                     icon: "error",
-                    confirmButtonColor: "#d33",
+                    confirmButtonColor: "#dc2626",
                 });
                 return;
             }
@@ -456,90 +595,88 @@
         }
 
         // Handle Edit Form Submission
-        document
-            .getElementById("editForm")
-            ?.addEventListener("submit", function (event) {
-                event.preventDefault();
-                const id = document.getElementById("editId").value;
-                const name = document.getElementById("editName").value;
-                const quantity = document.getElementById("editQuantity").value;
-                const category = document.getElementById("editCategory").value;
-                const imageUrl = document.getElementById("editImageUrl").value;
+        document.getElementById("editForm")?.addEventListener("submit", function (event) {
+            event.preventDefault();
+            if (!validateEditForm()) return;
 
-                if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
-                    Swal.fire({
-                        title: "Error!",
-                        text: "ID item tidak valid.",
-                        icon: "error",
-                        confirmButtonColor: "#d33",
-                    });
-                    return;
-                }
+            const id = document.getElementById("editId").value;
+            const name = document.getElementById("editName").value;
+            const quantity = document.getElementById("editQuantity").value;
+            const category = document.getElementById("editCategory").value;
+            const imageUrl = document.getElementById("editImageUrl").value;
+            const editButtonText = document.getElementById("editButtonText");
+            const editButtonSpinner = document.getElementById("editButtonSpinner");
 
+            if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
                 Swal.fire({
-                    title: "Apakah Anda yakin?",
-                    text: `Apakah Anda ingin memperbarui item: ${name} dengan jumlah ${quantity}?`,
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Ya, perbarui!",
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const formData = new FormData();
-                        formData.append("name", name);
-                        formData.append("quantity", quantity);
-                        formData.append("imageUrl", imageUrl);
-                        formData.append("category", category);
-                        // Add CSRF token to the request headers
-                        const csrfToken = document
-                            .querySelector('meta[name="_csrf"]')
-                            .getAttribute("content");
-                        const csrfHeader = document
-                            .querySelector('meta[name="_csrf_header"]')
-                            .getAttribute("content");
+                    title: "Error!",
+                    text: "Invalid item ID.",
+                    icon: "error",
+                    confirmButtonColor: "#dc2626",
+                });
+                return;
+            }
 
-                        fetch(`/update/${id}`, {
-                            method: "POST",
-                            body: formData,
-                            headers: {
-                                [csrfHeader]: csrfToken, // Include CSRF token in headers
-                            },
-                        })
-                            .then((response) => response.json())
-                            .then((data) => {
-                                if (data.status === "success") {
-                                    Swal.fire({
-                                        title: "Berhasil!",
-                                        text: data.message,
-                                        icon: "success",
-                                        confirmButtonColor: "#3085d6",
-                                    });
-                                    // updateTable(data.items);
-                                    fetchItems();
-                                    document
-                                        .getElementById("editModal")
-                                        .classList.add("hidden");
-                                } else {
-                                    Swal.fire({
-                                        title: "Error!",
-                                        text: data.message,
-                                        icon: "error",
-                                        confirmButtonColor: "#d33",
-                                    });
-                                }
-                            })
-                            .catch((error) => {
+            Swal.fire({
+                title: "Are you sure?",
+                text: `Do you want to update item: ${name} with quantity ${quantity}?`,
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#2563eb",
+                cancelButtonColor: "#dc2626",
+                confirmButtonText: "Yes, update it!",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    editButtonText.classList.add("hidden");
+                    editButtonSpinner.classList.remove("hidden");
+                    const formData = new FormData();
+                    formData.append("name", name);
+                    formData.append("quantity", quantity);
+                    formData.append("imageUrl", imageUrl);
+                    formData.append("category", category);
+                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
+
+                    fetch(`/update/${id}`, {
+                        method: "POST",
+                        body: formData,
+                        headers: { [csrfHeader]: csrfToken },
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            editButtonText.classList.remove("hidden");
+                            editButtonSpinner.classList.add("hidden");
+                            if (data.status === "success") {
+                                Swal.fire({
+                                    title: "Success!",
+                                    text: data.message,
+                                    icon: "success",
+                                    confirmButtonColor: "#2563eb",
+                                });
+                                fetchItems();
+                                document.getElementById("editModal").classList.add("hidden");
+                            } else {
                                 Swal.fire({
                                     title: "Error!",
-                                    text: "Gagal memperbarui item.",
+                                    text: data.message,
                                     icon: "error",
-                                    confirmButtonColor: "#d33",
+                                    confirmButtonColor: "#dc2626",
                                 });
+                            }
+                        })
+                        .catch((error) => {
+                            editButtonText.classList.remove("hidden");
+                            editButtonSpinner.classList.add("hidden");
+                            Swal.fire({
+                                title: "Error!",
+                                text: "Failed to update item.",
+                                icon: "error",
+                                confirmButtonColor: "#dc2626",
                             });
-                    }
-                });
+                        });
+                }
             });
+        });
 
         // Close Edit Modal
         const closeModalButton = document.getElementById("closeModal");
@@ -550,66 +687,53 @@
         }
 
         // Handle Sort Links
-        document
-            .getElementById("sortByName")
-            .addEventListener("click", function (event) {
-                event.preventDefault();
-                currentSortBy = "name";
-                fetchItems();
-            });
+        document.getElementById("sortByName").addEventListener("click", function (event) {
+            event.preventDefault();
+            currentSortBy = "name";
+            fetchItems();
+        });
 
-        document
-            .getElementById("sortByQuantity")
-            .addEventListener("click", function (event) {
-                event.preventDefault();
-                currentSortBy = "quantity";
-                fetchItems();
-            });
+        document.getElementById("sortByQuantity").addEventListener("click", function (event) {
+            event.preventDefault();
+            currentSortBy = "quantity";
+            fetchItems();
+        });
 
-        document
-            .getElementById("sortByCategory")
-            .addEventListener("click", function (event) {
-                event.preventDefault();
-                currentSortBy = "category";
-                // Jika filter saat ini adalah "All Categories", ubah ke kategori spesifik pertama yang tersedia
-                // untuk memastikan hanya satu kategori yang ditampilkan.
-                const categoryFilterElement =
-                    document.getElementById("categoryFilter");
-                if (
-                    currentFilterByCategory === "" ||
-                    currentFilterByCategory === null
-                ) {
-                    // Cek dari variabel global
-                    let firstActualCategoryValue = "";
-                    // Cari opsi pertama yang bukan "All Categories"
-                    for (let i = 0; i < categoryFilterElement.options.length; i++) {
-                        if (categoryFilterElement.options[i].value !== "") {
-                            firstActualCategoryValue =
-                                categoryFilterElement.options[i].value;
-                            break;
-                        }
-                    }
-                    if (firstActualCategoryValue !== "") {
-                        currentFilterByCategory = firstActualCategoryValue; // Perbarui state global
-                        categoryFilterElement.value = firstActualCategoryValue; // Sinkronkan tampilan dropdown
+        document.getElementById("sortByCategory").addEventListener("click", function (event) {
+            event.preventDefault();
+            currentSortBy = "category";
+            const categoryFilterElement = document.getElementById("categoryFilter");
+            if (currentFilterByCategory === "" || currentFilterByCategory === null) {
+                let firstActualCategoryValue = "";
+                for (let i = 0; i < categoryFilterElement.options.length; i++) {
+                    if (categoryFilterElement.options[i].value !== "") {
+                        firstActualCategoryValue = categoryFilterElement.options[i].value;
+                        break;
                     }
                 }
-                fetchItems();
-            });
+                if (firstActualCategoryValue !== "") {
+                    currentFilterByCategory = firstActualCategoryValue;
+                    categoryFilterElement.value = firstActualCategoryValue;
+                }
+            }
+            fetchItems();
+        });
 
         // Fetch Items for Sorting
         function fetchItems() {
+            document.getElementById("loadingSpinner").classList.remove("hidden");
             const url = currentSortBy ? `/sort?sortBy=${currentSortBy}` : "/sort";
             fetch(url)
                 .then((response) => response.text())
                 .then((html) => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, "text/html");
-                    const newTableBody = doc.querySelector("#itemsTableBody").innerHTML;
-                    document.getElementById("itemsTableBody").innerHTML = newTableBody;
-                    attachEventListeners();
+                    const newList = doc.querySelector("#itemsList");
+                    if (newList) {
+                        document.getElementById("itemsList").innerHTML = newList.innerHTML;
+                        attachEventListeners();
+                    }
                     const searchTerm = document.getElementById("search").value;
-                    let url = "/sort/api?";
                     let apiUrl = "/sort/api?";
                     const params = [];
 
@@ -617,11 +741,7 @@
                         params.push(`sortBy=${encodeURIComponent(currentSortBy)}`);
                     }
                     if (currentFilterByCategory) {
-                        params.push(
-                            `filterByCategory=${encodeURIComponent(
-                                currentFilterByCategory
-                            )}`
-                        );
+                        params.push(`filterByCategory=${encodeURIComponent(currentFilterByCategory)}`);
                     }
                     if (searchTerm) {
                         params.push(`search=${encodeURIComponent(searchTerm)}`);
@@ -633,19 +753,16 @@
                     }
 
                     apiUrl += params.join("&");
-                    console.log("Fetching items from API:", apiUrl);
                     fetch(apiUrl, {
                         method: "GET",
                         headers: {
                             Accept: "application/json",
-                            "X-Requested-With": "XMLHttpRequest", // Optional, but good practice for AJAX
+                            "X-Requested-With": "XMLHttpRequest",
                         },
                     })
                         .then((response) => {
                             if (!response.ok) {
-                                throw new Error(
-                                    "Network response was not ok: " + response.statusText
-                                );
+                                throw new Error("Network response was not ok: " + response.statusText);
                             }
                             return response.json();
                         })
@@ -653,23 +770,20 @@
                             if (data && data.items) {
                                 updateTable(data.items);
                             } else {
-                                console.error("Invalid data structure from API:", data);
                                 Swal.fire({
                                     title: "Error!",
                                     text: "Received invalid data from server.",
                                     icon: "error",
-                                    confirmButtonColor: "#d33",
+                                    confirmButtonColor: "#dc2626",
                                 });
                             }
                         })
                         .catch((error) => {
-                            console.error("Fetch items error:", error);
                             Swal.fire({
                                 title: "Error!",
-                                text: "Gagal memuat item.",
-                                text: "Gagal memuat item: " + error.message,
+                                text: "Failed to load items: " + error.message,
                                 icon: "error",
-                                confirmButtonColor: "#d33",
+                                confirmButtonColor: "#dc2626",
                             });
                         });
                 });
@@ -681,6 +795,7 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 const searchTerm = this.value.toLowerCase();
+                document.getElementById("loadingSpinner").classList.remove("hidden");
                 const url = searchTerm
                     ? `/sort/api?search=${encodeURIComponent(searchTerm)}`
                     : "/sort/api";
@@ -693,12 +808,7 @@
                 })
                     .then((response) => {
                         if (!response.ok) {
-                            throw new Error(
-                                "Network response was not ok: Status " +
-                                response.status +
-                                " - " +
-                                response.statusText
-                            );
+                            throw new Error("Network response was not ok: " + response.statusText);
                         }
                         return response.json();
                     })
@@ -706,40 +816,36 @@
                         updateTable(data.items);
                     })
                     .catch((error) => {
-                        console.error("Search error:", error);
                         Swal.fire({
                             title: "Error!",
-                            text: "Gagal mencari item: " + error.message,
+                            text: "Failed to search items: " + error.message,
                             icon: "error",
-                            confirmButtonColor: "#d33",
+                            confirmButtonColor: "#dc2626",
                         });
                     });
-                fetchItems(); // Call fetchItems which now includes search term
+                fetchItems();
             }, 300);
         });
 
         // Event listener for category filter
-        document
-            .getElementById("categoryFilter")
-            .addEventListener("change", function () {
-                currentFilterByCategory = this.value;
-                fetchItems();
-            });
+        document.getElementById("categoryFilter").addEventListener("change", function () {
+            currentFilterByCategory = this.value;
+            fetchItems();
+        });
 
         // Event listener for page size selector
-        document.getElementById('pageSizeSelect').addEventListener('change', function () {
+        document.getElementById("pageSizeSelect").addEventListener("change", function () {
             const selectedPageSize = this.value;
             const params = new URLSearchParams();
             if (currentSortBy) params.append("sortBy", currentSortBy);
             if (currentFilterByCategory) params.append("filterByCategory", currentFilterByCategory);
-            const searchTerm = document.getElementById('search')?.value;
+            const searchTerm = document.getElementById("search")?.value;
             if (searchTerm) params.append("search", searchTerm);
             params.append("pageSize", selectedPageSize);
-            params.append("page", 1); // reset ke halaman 1 saat ganti pageSize
+            params.append("page", 1);
 
             window.location.href = `/sort?${params.toString()}`;
         });
-
 
         // Initial attachment of event listeners
         attachEventListeners();

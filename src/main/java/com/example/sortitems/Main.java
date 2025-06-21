@@ -9,6 +9,6 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 public class Main {
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);
-        System.out.println("Application started. Access at: http://localhost:8080/sort");
+        System.out.println("Application started. Access at: http://localhost:7474/sort");
     }
 }
