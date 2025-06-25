@@ -5,6 +5,7 @@ com\example\sortitems\controller\ItemController.class
 com\example\sortitems\controller\LoginController.class
 com\example\sortitems\model\User.class
 com\example\sortitems\Main.class
+com\example\sortitems\controller\ScannerController.class
 com\example\sortitems\service\ActivityLogService.class
 com\example\sortitems\model\Item.class
 com\example\sortitems\config\SecurityConfig.class
@@ -12,3 +13,4 @@ com\example\sortitems\repository\ItemRepository.class
 com\example\sortitems\model\ActivityLog.class
 com\example\sortitems\repository\UserRepository.class
 com\example\sortitems\config\DataInitializer.class
+com\example\sortitems\controller\PageController.class

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Scanner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md text-center space-y-4">
+    <h1 class="text-2xl font-bold text-gray-800">Scanner QR Kamera Aktif</h1>
+
+    <!-- Dropdown pilihan kamera -->
+    <select id="cameraSelect" class="w-full px-2 py-1 border rounded text-gray-700 focus:outline-none focus:ring">
+      <option>Memuat daftar kamera...</option>
+    </select>
+
+    <video id="preview" class="rounded border border-gray-300 w-full h-64 bg-black" autoplay muted playsinline></video>
+
+    <p id="barcode-result" class="text-lg text-green-600 font-semibold hidden"></p>
+  </div>
+
+  <!-- Library ZXing -->
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
+
+  <script>
+    const codeReader = new ZXing.BrowserQRCodeReader(); // hanya baca QR Code
+    const video = document.getElementById('preview');
+    const resultText = document.getElementById('barcode-result');
+    const cameraSelect = document.getElementById('cameraSelect');
+
+    let lastScanned = "";
+    let cooldown = false;
+
+    codeReader.listVideoInputDevices().then(videoInputDevices => {
+      cameraSelect.innerHTML = "";
+
+      videoInputDevices.forEach((device, index) => {
+        const option = document.createElement('option');
+        option.value = device.deviceId;
+        option.text = device.label || `Kamera ${index + 1}`;
+        cameraSelect.appendChild(option);
+      });
+
+      if (videoInputDevices.length > 0) {
+        startDecoding(videoInputDevices[0].deviceId);
+      }
+
+      cameraSelect.addEventListener("change", () => {
+        startDecoding(cameraSelect.value);
+      });
+    }).catch(err => console.error(err));
+
+    function startDecoding(deviceId) {
+      codeReader.reset();
+
+      codeReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
+        if (result) {
+          const qr = result.text;
+
+          if (qr !== lastScanned && !cooldown) {
+            lastScanned = qr;
+            cooldown = true;
+            resultText.textContent = "QR Code: " + qr;
+            resultText.classList.remove('hidden');
+
+            // Kirim ke backend
+            fetch('/api/save-barcode', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ barcode: qr })
+            }).then(res => res.text()).then(console.log);
+
+            // Suara beep
+            const beep = new Audio("/audio/beep.mp3");
+            beep.play().catch(console.warn);
+
+            setTimeout(() => {
+              cooldown = false;
+            }, 3000);
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

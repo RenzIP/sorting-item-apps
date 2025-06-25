@@ -12,6 +12,7 @@
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="http://localhost:35729/livereload.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -35,13 +36,27 @@
         }
 
         @keyframes modalFadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         @keyframes modalFadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.9); }
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: scale(0.9);
+            }
         }
 
         .btn {
@@ -53,7 +68,8 @@
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
         }
 
-        input:focus, select:focus {
+        input:focus,
+        select:focus {
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
             border-color: #3b82f6;
         }
@@ -73,8 +89,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         header {
@@ -93,7 +114,8 @@
         <div sec:authorize="isAuthenticated()" class="flex items-center space-x-4">
             <span class="text-gray-600 text-lg font-medium">Hello, <span sec:authentication="name"></span>!</span>
             <form th:action="@{/logout}" method="post" style="display: inline">
-                <button type="submit" class="btn bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700" aria-label="Logout">
+                <button type="submit" class="btn bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700"
+                    aria-label="Logout">
                     Logout
                 </button>
             </form>
@@ -144,11 +166,25 @@
                 <span id="addButtonText">Add Item</span>
                 <div id="addButtonSpinner" class="loading-spinner hidden ml-2"></div>
             </button>
+            <button type="button" id="generateBarcode"
+                class="btn w-full mt-4 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 flex justify-center items-center">
+                Generate Barcode
+            </button>
+            <div id="barcodeContainer" class="hidden">
+                <canvas id="qrcode" class="mx-auto"></canvas>
+            </div>
+
+            <button id="downloadBarcode"
+                class="mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded hidden">
+                Download Barcode
+            </button>
         </form>
     </div>
 
+
     <!-- Filters and Search -->
-    <div class="bg-white p-8 rounded-xl shadow-lg mb-8 w-full max-w-7xl flex flex-col md:flex-row md:space-x-6 space-y-6 md:space-y-0">
+    <div
+        class="bg-white p-8 rounded-xl shadow-lg mb-8 w-full max-w-7xl flex flex-col md:flex-row md:space-x-6 space-y-6 md:space-y-0">
         <div class="flex-1">
             <label class="block text-gray-700 text-sm font-medium mb-2" for="search">Search by Name</label>
             <input type="text" id="search" name="search" th:value="${search}" placeholder="Type to search..."
@@ -182,11 +218,16 @@
 
     <!-- Sort Links -->
     <div class="mb-8 flex flex-wrap gap-4 px-4">
-        <a th:href="@{/sort(sortBy='name')}" id="sortByName" class="btn text-blue-600 hover:underline font-medium" aria-label="Sort by name">Sort by Name</a>
-        <a th:href="@{/sort(sortBy='quantity')}" id="sortByQuantity" class="btn text-blue-600 hover:underline font-medium" aria-label="Sort by quantity">Sort by Quantity</a>
-        <a th:href="@{/sort(sortBy='category')}" id="sortByCategory" class="btn text-blue-600 hover:underline font-medium" aria-label="Sort by category">Sort by Category</a>
-        <a th:href="@{/history}" class="btn bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700" aria-label="View history">View History</a>
-        <a th:href="@{/trash}" class="btn bg-gray-600 text-white px-6 py-2 rounded-full hover:bg-gray-700" aria-label="View trash">View Trash</a>
+        <a th:href="@{/sort(sortBy='name')}" id="sortByName" class="btn text-blue-600 hover:underline font-medium"
+            aria-label="Sort by name">Sort by Name</a>
+        <a th:href="@{/sort(sortBy='quantity')}" id="sortByQuantity"
+            class="btn text-blue-600 hover:underline font-medium" aria-label="Sort by quantity">Sort by Quantity</a>
+        <a th:href="@{/sort(sortBy='category')}" id="sortByCategory"
+            class="btn text-blue-600 hover:underline font-medium" aria-label="Sort by category">Sort by Category</a>
+        <a th:href="@{/history}" class="btn bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700"
+            aria-label="View history">View History</a>
+        <a th:href="@{/trash}" class="btn bg-gray-600 text-white px-6 py-2 rounded-full hover:bg-gray-700"
+            aria-label="View trash">View Trash</a>
     </div>
 
     <!-- Items Grid -->
@@ -195,8 +236,7 @@
             <div th:each="item : ${items}" class="card bg-white rounded-xl shadow-lg p-6 flex flex-col"
                 th:data-id="${item.idAsString}">
                 <div class="flex items-center mb-4">
-                    <div th:if="${item.imageUrl != null && !item.imageUrl.isEmpty()}"
-                        class="h-16 w-16 flex-shrink-0">
+                    <div th:if="${item.imageUrl != null && !item.imageUrl.isEmpty()}" class="h-16 w-16 flex-shrink-0">
                         <img th:src="${item.imageUrl}" alt="Item Image" class="h-full w-full object-cover rounded-lg" />
                     </div>
                     <div th:unless="${item.imageUrl != null && !item.imageUrl.isEmpty()}"
@@ -233,15 +273,17 @@
     </div>
 
     <!-- Pagination Controls -->
-    <div class="mt-8 flex justify-center items-center space-x-4" th:if="${totalPages > 1}" role="navigation" aria-label="Pagination">
+    <div class="mt-8 flex justify-center items-center space-x-4" th:if="${totalPages > 1}" role="navigation"
+        aria-label="Pagination">
         <a th:href="@{/sort(page=${currentPage - 1}, pageSize=${pageSize}, sortBy=${sortBy}, filterByCategory=${filterByCategory}, search=${search})}"
-            th:if="${currentPage > 1}"
-            class="btn px-6 py-2 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300" aria-label="Previous page">Previous</a>
+            th:if="${currentPage > 1}" class="btn px-6 py-2 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300"
+            aria-label="Previous page">Previous</a>
         <span class="text-gray-600 font-medium">Page <span th:text="${currentPage}"></span> of <span
                 th:text="${totalPages}"></span></span>
         <a th:href="@{/sort(page=${currentPage + 1}, pageSize=${pageSize}, sortBy=${sortBy}, filterByCategory=${filterByCategory}, search=${search})}"
             th:if="${currentPage < totalPages}"
-            class="btn px-6 py-2 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300" aria-label="Next page">Next</a>
+            class="btn px-6 py-2 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300"
+            aria-label="Next page">Next</a>
     </div>
 
     <!-- Edit Modal (Hidden by Default, Admin Only) -->
@@ -264,7 +306,8 @@
                     <input type="number" id="editQuantity" name="quantity" required min="0"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         aria-required="true" />
-                    <p class="text-red-500 text-sm mt-1 hidden" id="editQuantityError">Please enter a valid quantity.</p>
+                    <p class="text-red-500 text-sm mt-1 hidden" id="editQuantityError">Please enter a valid quantity.
+                    </p>
                 </div>
                 <div class="mb-5">
                     <label class="block text-gray-700 text-sm font-medium mb-2" for="editImageUrl">Image URL</label>
@@ -300,7 +343,6 @@
             </form>
         </div>
     </div>
-
     <!-- JavaScript for Handling AJAX, SweetAlert2, and Form Validation -->
     <script>
         let currentSortBy = /*[[${sortBy}]]*/ null;
@@ -849,6 +891,99 @@
 
         // Initial attachment of event listeners
         attachEventListeners();
+
+        function waitForQRCode(callback) {
+            if (typeof QRCode !== "undefined") {
+                console.log("QRCode library loaded successfully");
+                callback();
+            } else {
+                console.error("QRCode library not loaded, retrying...");
+                setTimeout(() => waitForQRCode(callback), 500);
+            }
+        }
+
+        waitForQRCode(() => {
+            const generateBarcodeButton = document.getElementById("generateBarcode");
+            if (!generateBarcodeButton) {
+                console.error("Generate Barcode button not found");
+                return;
+            }
+
+            generateBarcodeButton.addEventListener("click", function () {
+                console.log("Generate Barcode button clicked");
+
+                const name = document.getElementById("name").value.trim();
+                const quantity = document.getElementById("quantity").value;
+                const imageUrl = document.getElementById("imageUrl").value.trim();
+                const category = document.getElementById("category").value;
+
+                if (!name || !quantity || !category) {
+                    Swal.fire({
+                        title: "Data Kurang Lengkap!",
+                        text: "Pastikan name, quantity, dan category sudah diisi untuk membuat QR Code.",
+                        icon: "warning",
+                        confirmButtonColor: "#f59e0b",
+                    });
+                    console.warn("Incomplete form data");
+                    return;
+                }
+
+                const dataObject = {
+                    name,
+                    quantity: parseInt(quantity),
+                    imageUrl,
+                    category
+                };
+
+                const qrValue = JSON.stringify(dataObject);
+                const canvas = document.getElementById("qrcode");
+
+                if (!canvas) {
+                    console.error("QRCode canvas element not found");
+                    Swal.fire({
+                        title: "Error!",
+                        text: "Canvas untuk QR Code tidak ditemukan.",
+                        icon: "error",
+                        confirmButtonColor: "#dc2626",
+                    });
+                    return;
+                }
+
+                try {
+                    // Bersihkan canvas sebelumnya
+                    canvas.innerHTML = "";
+                    new QRCode(canvas, {
+                        text: qrValue,
+                        width: 300,
+                        height: 300,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
+                    console.log("QR Code generated successfully");
+                    document.getElementById("barcodeContainer").classList.remove("hidden");
+                    document.getElementById("downloadBarcode").classList.remove("hidden");
+
+                    document.getElementById("downloadBarcode").addEventListener("click", function () {
+                        console.log("Download Barcode button clicked");
+                        const imgURL = canvas.querySelector('img').src; // Ambil gambar dari elemen img yang dibuat oleh QRCode.js
+                        const a = document.createElement("a");
+                        a.href = imgURL;
+                        a.download = `${name}-qrcode.png`;
+                        a.click();
+                    }, { once: true });
+                } catch (e) {
+                    console.error("Exception in QRCode generation:", e);
+                    Swal.fire({
+                        title: "Error!",
+                        text: "Terjadi kesalahan saat membuat QR Code.",
+                        icon: "error",
+                        confirmButtonColor: "#dc2626",
+                    });
+                }
+            });
+        });
     </script>
 </body>
 
