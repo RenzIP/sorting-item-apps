@@ -1,90 +1,325 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QR Code Scanner</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8" />
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Code Scanner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-  <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md text-center space-y-4">
-    <h1 class="text-2xl font-bold text-gray-800">Scanner QR Kamera Aktif</h1>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
 
-    <!-- Dropdown pilihan kamera -->
-    <select id="cameraSelect" class="w-full px-2 py-1 border rounded text-gray-700 focus:outline-none focus:ring">
-      <option>Memuat daftar kamera...</option>
-    </select>
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg text-center space-y-6 border border-slate-200">
+        <h1 class="text-2xl font-bold text-gray-800">Scanner QR Kamera Aktif</h1>
 
-    <video id="preview" class="rounded border border-gray-300 w-full h-64 bg-black" autoplay muted playsinline></video>
+        <!-- Navigation Button -->
+        <div class="flex justify-between items-center mb-4">
+            <a href="/sort" class="transition-transform duration-200 hover:scale-105 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                ← Kembali ke Daftar Item
+            </a>
+            <button id="toggleScanner" class="transition-all duration-300 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 hover:scale-105">
+                Mulai Scanner
+            </button>
+        </div>
 
-    <p id="barcode-result" class="text-lg text-green-600 font-semibold hidden"></p>
-  </div>
+        <!-- Dropdown pilihan kamera -->
+        <select id="cameraSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option>Memuat daftar kamera...</option>
+        </select>
 
-  <!-- Library ZXing -->
-  <script src="https://unpkg.com/@zxing/library@latest"></script>
+        <video id="preview" class="rounded-lg border-2 border-gray-300 w-full h-64 bg-black transition-all duration-300" autoplay muted
+            playsinline></video>
 
-  <script>
-    const codeReader = new ZXing.BrowserQRCodeReader(); // hanya baca QR Code
-    const video = document.getElementById('preview');
-    const resultText = document.getElementById('barcode-result');
-    const cameraSelect = document.getElementById('cameraSelect');
+        <!-- Status dan Result -->
+        <div id="scanner-status" class="text-sm text-gray-600 transition-colors duration-300">
+            Scanner siap digunakan
+        </div>
 
-    let lastScanned = "";
-    let cooldown = false;
+        <div id="barcode-result" class="text-lg font-semibold hidden p-4 rounded-lg border transition-all duration-300 transform scale-95 opacity-0"></div>
 
-    codeReader.listVideoInputDevices().then(videoInputDevices => {
-      cameraSelect.innerHTML = "";
+        <!-- QR Code Image Upload -->
+        <div class="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">Unggah Gambar QR Code</h3>
+            <p class="text-sm text-gray-600 mb-3">
+                Pilih gambar QR code dari perangkat Anda untuk dipindai.
+            </p>
+            <input type="file" id="qrImageInput" accept="image/*" 
+                   class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-3">
+            <button id="scanImageButton"
+                    class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                Pindai Gambar
+            </button>
+        </div>
 
-      videoInputDevices.forEach((device, index) => {
-        const option = document.createElement('option');
-        option.value = device.deviceId;
-        option.text = device.label || `Kamera ${index + 1}`;
-        cameraSelect.appendChild(option);
-      });
+        <!-- Manual Input untuk Barcode Biasa -->
+        <div class="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">Input Manual Barcode</h3>
+            <input type="text" id="manualBarcode" placeholder="Masukkan kode barcode..."
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3">
+            <input type="text" id="manualItemName" placeholder="Nama item..."
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3">
+            <select id="manualCategory" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3">
+                <option value="">Pilih Kategori</option>
+                <option value="Makanan">Makanan</option>
+                <option value="Minuman">Minuman</option>
+                <option value="ATK">ATK</option>
+                <option value="Elektronik">Elektronik</option>
+            </select>
+            <input type="number" id="manualQuantity" placeholder="Quantity" value="1" min="1"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3">
+            <button id="saveManualBarcode" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                Simpan Item Manual
+            </button>
+        </div>
+    </div>
 
-      if (videoInputDevices.length > 0) {
-        startDecoding(videoInputDevices[0].deviceId);
-      }
+    <!-- Library ZXing -->
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
 
-      cameraSelect.addEventListener("change", () => {
-        startDecoding(cameraSelect.value);
-      });
-    }).catch(err => console.error(err));
+    <script>
+        const codeReader = new ZXing.BrowserQRCodeReader(); // Ganti dari BrowserMultiFormatReader
+        // hanya baca QR Code
+        const video = document.getElementById('preview');
+        const resultText = document.getElementById('barcode-result');
+        const cameraSelect = document.getElementById('cameraSelect');
+        const scannerStatus = document.getElementById('scanner-status');
+        const toggleButton = document.getElementById('toggleScanner');
 
-    function startDecoding(deviceId) {
-      codeReader.reset();
+        let lastScanned = "";
+        let cooldown = false;
+        let isScanning = false;
 
-      codeReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
-        if (result) {
-          const qr = result.text;
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
 
-          if (qr !== lastScanned && !cooldown) {
-            lastScanned = qr;
-            cooldown = true;
-            resultText.textContent = "QR Code: " + qr;
-            resultText.classList.remove('hidden');
+        codeReader.listVideoInputDevices().then(videoInputDevices => {
+            cameraSelect.innerHTML = "";
 
-            // Kirim ke backend
-            fetch('/api/save-barcode', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ barcode: qr })
-            }).then(res => res.text()).then(console.log);
+            videoInputDevices.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.text = device.label || `Kamera ${index + 1}`;
+                cameraSelect.appendChild(option);
+            });
 
-            // Suara beep
-            const beep = new Audio("/audio/beep.mp3");
-            beep.play().catch(console.warn);
+            // Jangan langsung mulai scanning
+            cameraSelect.addEventListener("change", () => {
+                if (isScanning) {
+                    startDecoding(cameraSelect.value);
+                }
+            });
+        }).catch(err => {
+            console.error(err);
+            scannerStatus.textContent = "Error: Tidak dapat mengakses kamera";
+            scannerStatus.className = "text-sm text-red-600";
+        });
 
-            setTimeout(() => {
-              cooldown = false;
-            }, 3000);
-          }
+        function startDecoding(deviceId) {
+            codeReader.reset();
+            isScanning = true;
+            video.classList.add('border-green-500', 'shadow-lg');
+            toggleButton.textContent = "Stop Scanner";
+            toggleButton.className = "transition-all duration-300 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 hover:scale-105";
+            scannerStatus.textContent = "Scanner aktif - Arahkan kamera ke QR Code";
+            scannerStatus.className = "text-sm text-green-600";
+            hideResult();
+
+            codeReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
+                if (result && isScanning) {
+                    const qr = result.text;
+
+                    if (qr !== lastScanned && !cooldown) {
+                        lastScanned = qr;
+                        cooldown = true;
+                        resultText.textContent = "Memproses QR Code...";
+                        showResult("text-blue-600", "bg-blue-50", "border-blue-200");
+
+                        // Kirim ke backend menggunakan fungsi terpusat
+                        sendQrCodeToBackend(qr);
+
+                        setTimeout(() => {
+                            cooldown = false;
+                        }, 3000);
+                    }
+                }
+            });
         }
-      });
-    }
-  </script>
+
+        function stopDecoding() {
+            codeReader.reset();
+            video.classList.remove('border-green-500', 'shadow-lg');
+            isScanning = false;
+            toggleButton.textContent = "Mulai Scanner";
+            toggleButton.className = "transition-all duration-300 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 hover:scale-105";
+            scannerStatus.textContent = "Scanner berhenti";
+            scannerStatus.className = "text-sm text-gray-600";
+        }
+
+        function showResult(textColor, bgColor, borderColor) {
+            resultText.className = `text-lg font-semibold p-4 rounded-lg border transition-all duration-300 transform ${textColor} ${bgColor} ${borderColor}`;
+            resultText.classList.remove('hidden', 'scale-95', 'opacity-0');
+            resultText.classList.add('scale-100', 'opacity-100');
+        }
+
+        function hideResult() {
+            resultText.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                if (!isScanning) { // Hanya sembunyikan jika scanner tidak aktif
+                    resultText.classList.add('hidden');
+                    resultText.textContent = '';
+                }
+            }, 300);
+
+
+        }
+
+        // Fungsi terpusat untuk mengirim QR code ke backend
+        function sendQrCodeToBackend(qr) {
+            fetch('/api/save-barcode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ barcode: qr }),
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        resultText.textContent = "✅ " + data.message;                        
+                        showResult("text-green-600", "bg-green-50", "border-green-200");
+                    } else {
+                        resultText.textContent = "❌ " + data.message;
+                        showResult("text-red-600", "bg-red-50", "border-red-200");
+                    }
+                })
+                .catch(error => {
+                    resultText.textContent = "❌ Error: " + error.message;                    
+                    showResult("text-red-600", "bg-red-50", "border-red-200");
+                });
+
+            // Suara beep menggunakan Web Audio API
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.8, audioContext.currentTime); // Meningkatkan volume suara beep
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {
+                console.warn('Could not play beep sound:', e);
+            }
+        }
+
+        // Toggle Scanner
+        toggleButton.addEventListener('click', () => {
+            if (isScanning) {
+                stopDecoding();
+            } else {
+                if (cameraSelect.value && cameraSelect.value !== "Memuat daftar kamera...") {
+                    startDecoding(cameraSelect.value);
+                } else {
+                    alert("Pilih kamera terlebih dahulu!");
+                }
+            }
+        });
+
+        // QR Code Image Upload
+        const qrImageInput = document.getElementById('qrImageInput');
+        const scanImageButton = document.getElementById('scanImageButton');
+
+        scanImageButton.addEventListener('click', () => {
+            if (qrImageInput.files.length === 0) {
+                alert("Silakan pilih file gambar terlebih dahulu!");
+                return;
+            }
+
+            const file = qrImageInput.files[0];
+            const reader = new FileReader();
+
+            reader.onloadend = function () {
+                const image = new Image();
+                image.src = reader.result;
+                image.onload = function () {
+                    resultText.textContent = "Memproses QR Code dari gambar...";
+                    showResult("text-blue-600", "bg-blue-50", "border-blue-200");
+
+                    codeReader.decodeFromImageElement(image)
+                        .then(result => {
+                            const qr = result.text;
+                            sendQrCodeToBackend(qr);
+                        })
+                        .catch(err => {
+                            console.error("Error decoding image:", err);
+                            resultText.textContent = "❌ Gagal memindai QR dari gambar. Pastikan gambar jelas.";
+                            showResult("text-red-600", "bg-red-50", "border-red-200");
+                        });
+                };
+                image.onerror = function () {
+                    alert("Gagal memuat file gambar.");
+                };
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Manual Barcode Input
+        document.getElementById('saveManualBarcode').addEventListener('click', () => {
+            const barcode = document.getElementById('manualBarcode').value.trim();
+            const itemName = document.getElementById('manualItemName').value.trim();
+            const category = document.getElementById('manualCategory').value;
+            const quantity = document.getElementById('manualQuantity').value;
+
+            if (!barcode || !itemName) {
+                alert("Barcode dan nama item harus diisi!");
+                return;
+            }
+
+            fetch('/api/scan-regular-barcode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({
+                    barcode: barcode,
+                    itemName: itemName,
+                    category: category,
+                    quantity: quantity
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    resultText.textContent = "✅ " + data.message;                    
+                    showResult("text-green-600", "bg-green-50", "border-green-200");
+                    // Clear form
+                    document.getElementById('manualBarcode').value = '';
+                    document.getElementById('manualItemName').value = '';
+                    document.getElementById('manualCategory').value = '';
+                    document.getElementById('manualQuantity').value = '1';
+                } else {
+                    resultText.textContent = "❌ " + data.message;                    
+                    showResult("text-red-600", "bg-red-50", "border-red-200");
+                }
+            })
+            .catch(error => {
+                resultText.textContent = "❌ Error: " + error.message;                
+                showResult("text-red-600", "bg-red-50", "border-red-200");
+            });
+        });
+    </script>
 </body>
+
 </html>

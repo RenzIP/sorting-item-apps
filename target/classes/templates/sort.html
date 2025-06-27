@@ -224,6 +224,8 @@
             class="btn text-blue-600 hover:underline font-medium" aria-label="Sort by quantity">Sort by Quantity</a>
         <a th:href="@{/sort(sortBy='category')}" id="sortByCategory"
             class="btn text-blue-600 hover:underline font-medium" aria-label="Sort by category">Sort by Category</a>
+        <a th:href="@{/scanner}" class="btn bg-purple-600 text-white px-6 py-2 rounded-full hover:bg-purple-700"
+            aria-label="Scan barcode">📱 Scan Barcode</a>
         <a th:href="@{/history}" class="btn bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700"
             aria-label="View history">View History</a>
         <a th:href="@{/trash}" class="btn bg-gray-600 text-white px-6 py-2 rounded-full hover:bg-gray-700"
@@ -918,7 +920,7 @@
                 const category = document.getElementById("category").value;
 
                 if (!name || !quantity || !category) {
-                    Swal.fire({
+                    Swal.fire({ // Validasi dasar untuk memastikan data penting terisi
                         title: "Data Kurang Lengkap!",
                         text: "Pastikan name, quantity, dan category sudah diisi untuk membuat QR Code.",
                         icon: "warning",
@@ -929,10 +931,10 @@
                 }
 
                 const dataObject = {
-                    name,
-                    quantity: parseInt(quantity),
-                    imageUrl,
-                    category
+                    name: name, // Nama item
+                    quantity: parseInt(quantity), // Kuantitas, diubah ke integer
+                    imageUrl: imageUrl, // URL gambar (bisa kosong)
+                    category: category // Kategori item
                 };
 
                 const qrValue = JSON.stringify(dataObject);
@@ -950,7 +952,7 @@
                 }
 
                 try {
-                    // Bersihkan canvas sebelumnya
+                    // Bersihkan canvas sebelumnya jika ada QR code yang sudah dibuat
                     canvas.innerHTML = "";
                     new QRCode(canvas, {
                         text: qrValue,
@@ -961,11 +963,11 @@
                         correctLevel: QRCode.CorrectLevel.H
                     });
 
-                    console.log("QR Code generated successfully");
+                    console.log("QR Code generated successfully for:", dataObject);
                     document.getElementById("barcodeContainer").classList.remove("hidden");
                     document.getElementById("downloadBarcode").classList.remove("hidden");
 
-                    document.getElementById("downloadBarcode").addEventListener("click", function () {
+                    document.getElementById("downloadBarcode").addEventListener("click", function () { // Event listener untuk download
                         console.log("Download Barcode button clicked");
                         const imgURL = canvas.querySelector('img').src; // Ambil gambar dari elemen img yang dibuat oleh QRCode.js
                         const a = document.createElement("a");
