@@ -1,2 +1,3 @@
-[build.env]
-GOOGLE_MAVEN_VERSION = "3.9.6"
+[[build.env]]
+name = "GOOGLE_MAVEN_VERSION"
+value = "3.9.6"
