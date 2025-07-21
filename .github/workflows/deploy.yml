@@ -9,7 +9,7 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }} # Pastikan secret ini ada
   SERVICE_NAME: sort-items
-  REGION: asia-southeast2 # Sesuai contoh Anda
+  REGION: asia-southeast1 # Sesuai contoh Anda
 
 jobs:
   Deploy:
