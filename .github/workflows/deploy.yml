@@ -3,7 +3,7 @@ name: Deploy Java App to Google Cloud Run
 on:
   push:
     branches:
-      - main # Sesuai contoh Anda, diubah dari master ke main
+      - master # Sesuai contoh Anda, diubah dari master ke main
   workflow_dispatch:
 
 env:
