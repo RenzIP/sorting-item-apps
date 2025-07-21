@@ -1,0 +1,41 @@
+# Maven
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment & secrets
+*.env
+*.env.*
+credentials.json
+*.key.json
+
+# Build output
+*.jar
+*.war
+*.ear
+
+# Node/npm (jika ada frontend)
+node_modules/
+
+# Misc
+*.swp 

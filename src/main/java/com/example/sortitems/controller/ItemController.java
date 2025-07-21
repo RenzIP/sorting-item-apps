@@ -90,49 +90,48 @@ public class ItemController {
     }
 
     @GetMapping(value = "/sort/api", produces = MediaType.APPLICATION_JSON_VALUE)
-@ResponseBody
-public Map<String, Object> getItemsApi(@RequestParam(required = false) String sortBy,
-                                       @RequestParam(required = false) String search,
-                                       @RequestParam(required = false) String filterByCategory,
-                                       @RequestParam(required = false) String pageSize) {
+    @ResponseBody
+    public Map<String, Object> getItemsApi(@RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String filterByCategory,
+            @RequestParam(required = false) String pageSize) {
 
-    System.out.println("API call - pageSize = " + pageSize);
-    int pageSizeInt = Integer.MAX_VALUE;
-    if (pageSize != null && !pageSize.equalsIgnoreCase("all")) {
-        try {
-            pageSizeInt = Integer.parseInt(pageSize);
-        } catch (NumberFormatException e) {
-            pageSizeInt = Integer.MAX_VALUE;
+        System.out.println("API call - pageSize = " + pageSize);
+        int pageSizeInt = Integer.MAX_VALUE;
+        if (pageSize != null && !pageSize.equalsIgnoreCase("all")) {
+            try {
+                pageSizeInt = Integer.parseInt(pageSize);
+            } catch (NumberFormatException e) {
+                pageSizeInt = Integer.MAX_VALUE;
+            }
         }
+
+        List<Item> items = getItems(sortBy, search, filterByCategory, null); // Ambil semua, pagination bisa di frontend
+
+        // Jika kamu ingin pagination di sini, potong di sini berdasarkan pageSizeInt
+        if (pageSizeInt != Integer.MAX_VALUE && items.size() > pageSizeInt) {
+            items = new ArrayList<>(items.subList(0, pageSizeInt));
+        }
+
+        if (search != null && !search.trim().isEmpty()) {
+            String searchLower = search.toLowerCase();
+            items = items.stream()
+                    .filter(item -> item.getName() != null && item.getName().toLowerCase().contains(searchLower))
+                    .collect(Collectors.toList());
+        }
+
+        if ("quantity".equalsIgnoreCase(sortBy)) {
+            items = bubbleSortByQuantity(items);
+        } else if ("category".equalsIgnoreCase(sortBy)) {
+            items = bubbleSortByCategory(items);
+        } else {
+            items = bubbleSortByName(items);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("items", items);
+        return response;
     }
-
-    List<Item> items = getItems(sortBy, search, filterByCategory, null); // Ambil semua, pagination bisa di frontend
-
-    // Jika kamu ingin pagination di sini, potong di sini berdasarkan pageSizeInt
-    if (pageSizeInt != Integer.MAX_VALUE && items.size() > pageSizeInt) {
-        items = new ArrayList<>(items.subList(0, pageSizeInt));
-    }
-
-    if (search != null && !search.trim().isEmpty()) {
-        String searchLower = search.toLowerCase();
-        items = items.stream()
-                .filter(item -> item.getName() != null && item.getName().toLowerCase().contains(searchLower))
-                .collect(Collectors.toList());
-    }
-
-    if ("quantity".equalsIgnoreCase(sortBy)) {
-        items = bubbleSortByQuantity(items);
-    } else if ("category".equalsIgnoreCase(sortBy)) {
-        items = bubbleSortByCategory(items);
-    } else {
-        items = bubbleSortByName(items);
-    }
-
-    Map<String, Object> response = new HashMap<>();
-    response.put("items", items);
-    return response;
-}
-
 
     @PostMapping("/add")
     @ResponseBody
