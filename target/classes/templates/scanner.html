@@ -3,8 +3,6 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="_csrf" th:content="${_csrf.token}" />
-    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>QR Code Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -92,9 +90,6 @@
         let cooldown = false;
         let isScanning = false;
 
-        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
-
         codeReader.listVideoInputDevices().then(videoInputDevices => {
             cameraSelect.innerHTML = "";
 
@@ -181,8 +176,7 @@
             fetch('/api/save-barcode', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    [csrfHeader]: csrfToken
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ barcode: qr }),
             })
@@ -289,8 +283,7 @@
             fetch('/api/scan-regular-barcode', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    [csrfHeader]: csrfToken
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     barcode: barcode,

@@ -3,8 +3,6 @@
 
 <head>
     <title>Sort Items</title>
-    <meta name="_csrf" th:content="${_csrf.token}" />
-    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
@@ -501,13 +499,9 @@
                     formData.append("imageUrl", imageUrl);
                     formData.append("category", category);
 
-                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
-                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
-
                     fetch("/add", {
                         method: "POST",
                         body: formData,
-                        headers: { [csrfHeader]: csrfToken },
                     })
                         .then((response) => response.json())
                         .then((data) => {
@@ -572,11 +566,8 @@
                 confirmButtonText: "Yes, delete it!",
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
-                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
                     fetch(`/delete/${id}`, {
                         method: "POST",
-                        headers: { [csrfHeader]: csrfToken },
                     })
                         .then((response) => response.json())
                         .then((data) => {
@@ -678,13 +669,10 @@
                     formData.append("quantity", quantity);
                     formData.append("imageUrl", imageUrl);
                     formData.append("category", category);
-                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
-                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
 
                     fetch(`/update/${id}`, {
                         method: "POST",
                         body: formData,
-                        headers: { [csrfHeader]: csrfToken },
                     })
                         .then((response) => response.json())
                         .then((data) => {

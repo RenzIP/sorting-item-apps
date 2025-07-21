@@ -3,8 +3,9 @@
 
 <head>
     <title>Trash Bin</title>
-    <meta name="_csrf" th:content="${_csrf.token}" />
-    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <!-- Hapus meta _csrf -->
+    <!-- <meta name="_csrf" th:content="${_csrf.token}" /> -->
+    <!-- <meta name="_csrf_header" th:content="${_csrf.headerName}" /> -->
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -94,8 +95,9 @@
     </div>
 
     <script>
-        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
+    // Hapus deklarasi csrfToken/csrfHeader
+    // Pada semua fetch, hapus headers: { [csrfHeader]: csrfToken }
+    // Jika ada Content-Type, biarkan, jika tidak, headers: {} saja
         const tableBody = document.getElementById('trash-table-body');
 
         function checkEmptyState() {
@@ -134,7 +136,6 @@
                     if (result.isConfirmed) {
                         fetch(`/trash/delete/${itemId}`, {
                             method: 'POST',
-                            headers: { [csrfHeader]: csrfToken }
                         })
                             .then(res => res.json())
                             .then(data => {
@@ -174,7 +175,6 @@
                     if (result.isConfirmed) {
                         fetch(`/restore/${itemId}`, {
                             method: 'POST',
-                            headers: { [csrfHeader]: csrfToken }
                         })
                             .then(res => res.json())
                             .then(data => {
