@@ -1,0 +1,2 @@
+[build.env]
+GOOGLE_MAVEN_VERSION = "3.9.6"
